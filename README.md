@@ -20,6 +20,7 @@ Directories:
   - We use Google Cloud Platform resources (Google Cloud Storage) in this repo. Instructions on getting set up are [here](#google-cloud-platform-gcp)
   - In this repo we use [pre-commit-hooks](#pre-commit-hooks)
   - Git/GitHub instructions are found in this [repo](https://github.com/SkyTruth/github_practice)
+  - In this repo, each MTM related project has a separate directory which contains documentation about the project. Projects are outlined broadly in [Repository Layout](#repository-layout), please see specific ReadMe files in each directory for additional information
 
 
 # Python Setup
@@ -37,7 +38,3 @@ py --version
 
 # License
 This work is licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0). See LICENSE.txt
-
-
-We are using Google's `Earth Engine <https://earthengine.google.com/>`_ to identify active MTR mines on Landsat Satellite Imagery using a Normalized Differenced Vegetation Index (NDVI) threshold. To eliminate locations with NDVI reflectance values similar to mine sites a mask was created to block roads, rivers and streams, and urban areas from the analysis. Earth Engine is a cloud-based geospatial computing platform which we are utilizing to automate the process of mine identification.
- 
