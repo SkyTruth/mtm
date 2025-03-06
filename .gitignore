@@ -1,4 +1,6 @@
 __pycache__/
+data/maskData/*/*
+# data/USCB_Data/*/*
 config_files/*.*
 working_archive/
 config.py
