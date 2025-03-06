@@ -1,4 +1,5 @@
 __pycache__/
+config_files/*/
 working_archive/
 config.py
 ToDo.txt
