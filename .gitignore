@@ -1,5 +1,8 @@
 __pycache__/
 config_files/*.*
 working_archive/
+data/maskData/interimMask/*
+data/maskData/finalMask/*
+data/USCB_Data/
 config.py
 ToDo.txt
