@@ -1,0 +1,2 @@
+# Note
+Code for the project was originally written as ipython notebooks, these are preserved in CAMRA/Archive. Some changes have been made to adapt the codes to .py files
