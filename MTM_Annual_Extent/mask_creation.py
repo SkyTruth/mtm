@@ -11,6 +11,7 @@ from osgeo import gdal, ogr, osr
 
 from mtm_utils.variables import (
     PROCESSING_YEAR,
+    MASK_DIR,
     MASK_INTERIM,
     MASK_FINAL,
     FIPS_CODES,
@@ -39,6 +40,11 @@ def data_dir_creation():
     os.makedirs(USCB_GJS, exist_ok=True)
     os.makedirs(USCB_SHP, exist_ok=True)
     os.makedirs(USCB_ZIP, exist_ok=True)
+
+    # Check if Data Directories exist for Mask Directories data for PROCESSING_YEAR, and making them if they do not
+    os.makedirs(MASK_DIR, exist_ok=True)
+    os.makedirs(MASK_INTERIM, exist_ok=True)
+    os.makedirs(MASK_FINAL, exist_ok=True)
 
 
 def data_download():
