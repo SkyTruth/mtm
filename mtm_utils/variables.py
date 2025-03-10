@@ -45,6 +45,8 @@ GCLOUD_MASK_DIR = "mask_data/"
 
 # Set the Cloud Folder where CAMRA data are stored
 GCLOUD_CAMRA_DIR = "CAMRA/"
+GCLOUD_CAMRA_CSV = "csv/"
+GCLOUD_CAMRA_GJS = "geojson/"
 
 # Name for the folder in the Cloud Bucket for the annual mask data
 GCLOUD_EE_DIR = "gee_data/"

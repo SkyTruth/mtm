@@ -2,7 +2,7 @@ import ee
 from ee import batch
 
 from config import EE_SERVICE_ACCOUNT, EE_CREDENTIAL_DIR, EE_CREDENTIALS
-from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_CAMRA_DIR
+from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_CAMRA_DIR, GCLOUD_CAMRA_CSV, GCLOUD_CAMRA_GJS
 
 """
 This code is a .py equivalent of the original code found at CAMRA/Archive/2021-03-09_sr_annualLastMinedMetrics.ipynb
@@ -16,10 +16,7 @@ https://code.earthengine.google.com/a92026e76f77c3c49244e22c81065304
 """
 
 
-print(f"GEE Service Account: {EE_SERVICE_ACCOUNT}\n  > Credentials: {EE_CREDENTIALS}")
 credentials = ee.ServiceAccountCredentials(EE_SERVICE_ACCOUNT, EE_CREDENTIALS)
-print(credentials)
-
 ee.Initialize(credentials)
 
 
@@ -494,14 +491,14 @@ epaEcoregion_outfile_name = '2025-03-07_epaEcoregionSite_srHarmonizedMed_metricP
 customPolygon_outfile_name = '2025-03-07_customPolygon_srHarmonizedMed_metricProcessed'
 
 # Prepare Output Tasks
-lastMined_csv = batch.Export.table.toCloudStorage(collection=processedLastMined_5yr, description=lastMined_outfile_name, bucket=GCLOUD_BUCKET, fileNamePrefix=GCLOUD_CAMRA_DIR + lastMined_outfile_name, fileFormat="CSV")
-lastMined_gjs = batch.Export.table.toCloudStorage(collection=processedLastMined_5yr, description=lastMined_outfile_name, bucket=GCLOUD_BUCKET, fileNamePrefix=GCLOUD_CAMRA_DIR + lastMined_outfile_name, fileFormat="GeoJSON")
+lastMined_csv = batch.Export.table.toCloudStorage(collection=processedLastMined_5yr, description=lastMined_outfile_name, bucket=GCLOUD_BUCKET, fileNamePrefix=GCLOUD_CAMRA_DIR + GCLOUD_CAMRA_CSV + lastMined_outfile_name, fileFormat="CSV")
+lastMined_gjs = batch.Export.table.toCloudStorage(collection=processedLastMined_5yr, description=lastMined_outfile_name, bucket=GCLOUD_BUCKET, fileNamePrefix=GCLOUD_CAMRA_DIR + GCLOUD_CAMRA_GJS + lastMined_outfile_name, fileFormat="GeoJSON")
 
-ecoRegion_csv = batch.Export.table.toCloudStorage(collection=fullyProcessed_EPA_ER_Sites, description=epaEcoregion_outfile_name, bucket=GCLOUD_BUCKET, fileNamePrefix=GCLOUD_CAMRA_DIR + epaEcoregion_outfile_name, fileFormat="CSV")
-ecoRegion_gjs = batch.Export.table.toCloudStorage(collection=fullyProcessed_EPA_ER_Sites, description=epaEcoregion_outfile_name, bucket=GCLOUD_BUCKET, fileNamePrefix=GCLOUD_CAMRA_DIR + epaEcoregion_outfile_name, fileFormat="GeoJSON")
+ecoRegion_csv = batch.Export.table.toCloudStorage(collection=fullyProcessed_EPA_ER_Sites, description=epaEcoregion_outfile_name, bucket=GCLOUD_BUCKET, fileNamePrefix=GCLOUD_CAMRA_DIR + GCLOUD_CAMRA_CSV + epaEcoregion_outfile_name, fileFormat="CSV")
+ecoRegion_gjs = batch.Export.table.toCloudStorage(collection=fullyProcessed_EPA_ER_Sites, description=epaEcoregion_outfile_name, bucket=GCLOUD_BUCKET, fileNamePrefix=GCLOUD_CAMRA_DIR + GCLOUD_CAMRA_GJS + epaEcoregion_outfile_name, fileFormat="GeoJSON")
 
-customPoly_csv = batch.Export.table.toCloudStorage(collection=fullyProcessedCustomPolygons, description=customPolygon_outfile_name, bucket=GCLOUD_BUCKET, fileNamePrefix=GCLOUD_CAMRA_DIR + customPolygon_outfile_name, fileFormat="CSV")
-customPoly_gjs = batch.Export.table.toCloudStorage(collection=fullyProcessedCustomPolygons, description=customPolygon_outfile_name, bucket=GCLOUD_BUCKET, fileNamePrefix=GCLOUD_CAMRA_DIR + customPolygon_outfile_name, fileFormat="GeoJSON")
+customPoly_csv = batch.Export.table.toCloudStorage(collection=fullyProcessedCustomPolygons, description=customPolygon_outfile_name, bucket=GCLOUD_BUCKET, fileNamePrefix=GCLOUD_CAMRA_DIR + GCLOUD_CAMRA_CSV + customPolygon_outfile_name, fileFormat="CSV")
+customPoly_gjs = batch.Export.table.toCloudStorage(collection=fullyProcessedCustomPolygons, description=customPolygon_outfile_name, bucket=GCLOUD_BUCKET, fileNamePrefix=GCLOUD_CAMRA_DIR + GCLOUD_CAMRA_GJS + customPolygon_outfile_name, fileFormat="GeoJSON")
 
 
 exporting_lastMined_csv = batch.Task.start(lastMined_csv)
