@@ -510,7 +510,7 @@ exporting_lastMined_gjs = batch.Task.start(lastMined_gjs)
 exporting_ecoRegion_csv = batch.Task.start(ecoRegion_csv)
 exporting_ecoRegion_gjs = batch.Task.start(ecoRegion_gjs)
 
-# exporting_customPoly_csv = batch.Task.start(customPoly_csv)
-# exporting_customPoly_gjs = batch.Task.start(customPoly_gjs)
+exporting_customPoly_csv = batch.Task.start(customPoly_csv)
+exporting_customPoly_gjs = batch.Task.start(customPoly_gjs)
 
 print("Export started, process(es) sent to cloud")
