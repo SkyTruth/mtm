@@ -7,6 +7,7 @@ PROCESSING_YEAR = 2022
 Setting Up Local Directories For Mask Creation
 """
 DATA_DIR = "data/"
+TEMP_DIR = DATA_DIR + "tmp/"
 
 # UPDATED DIRS
 # Set the directories for the initial downloads
