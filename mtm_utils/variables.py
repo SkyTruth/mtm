@@ -43,6 +43,9 @@ GCLOUD_BUCKET = "mountaintop_mining"
 # Set the Cloud Folder where annual masks are stored
 GCLOUD_MASK_DIR = "mask_data/"
 
+# Set the Cloud Folder where CAMRA data are stored
+GCLOUD_CAMRA_DIR = "CAMRA/"
+
 # Name for the folder in the Cloud Bucket for the annual mask data
 GCLOUD_EE_DIR = "gee_data/"
 GCLOUD_EE_GPC_DIR = GCLOUD_EE_DIR + "GPC/"
