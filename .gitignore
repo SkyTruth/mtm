@@ -4,5 +4,6 @@ working_archive/
 data/maskData/interimMask/*
 data/maskData/finalMask/*
 data/USCB_Data/
+data/tmp/
 config.py
 ToDo.txt
