@@ -67,12 +67,12 @@ def tmp_download():
 def arm_processing():
     print("Processing ARM data...")
     infiles = [f for f in os.listdir(TEMP_DIR) if f.endswith(".csv")]
-    print(infiles)
+    # print(infiles)
 
     epa_df = gpd.read_file(TEMP_DIR+"TMP_2025-03-07_epaEcoregionSite_srHarmonizedMed_metricProcessed_ARM-processed.geojson")
     # mine_df = pd.read_csv(TEMP_DIR+"TMP_2025-03-07_lastMined_srHarmonizedMed_metricProcessed_ARM-processed.csv")
     mine_df = gpd.read_file(TEMP_DIR+"TMP_2025-03-07_lastMined_srHarmonizedMed_metricProcessed_ARM-processed.geojson")
-    mine_df = mine_df.head(5)
+    # mine_df = mine_df.head(5)
 
     er = gpd.read_file("data/ecoregions/geojson/EPA_Ecoregions_level_4.geojson")
 
@@ -93,9 +93,6 @@ def arm_processing():
     mine_df = mine_df.reindex(columns=cOrder)
     epa_df = epa_df.reindex(columns=eOrder)
 
-    print(mine_df.head(3))
-    print(epa_df.head(3))
-
     # ARM Calculation
     """
     Note:   If your file is processed or ordered differntly, the values in the BAND_DICT may not work. This shouldn't be an 
@@ -103,8 +100,8 @@ def arm_processing():
             contact christian@skytruth.org.
     """
     ALL_YEARS = list(range(1984, 2020))  # last year with metric data +1
-    YEARS = list(range(1985, 2016))
-    DISPLAY_YEARS = list(range(1980, 2021))
+    # YEARS = list(range(1985, 2016))
+    # DISPLAY_YEARS = list(range(1980, 2021))
 
     BAND_DICT = {
         'BLUE':  {'titleName': 'BLUE', 'year': ALL_YEARS, 'start': 0, 'end': 36},
@@ -125,8 +122,6 @@ def arm_processing():
     # Set Input Dataframes
     arm_input_df = pd.DataFrame(mine_df)
     epaER_dF = pd.DataFrame(epa_df)
-
-    print(type(arm_input_df))
 
     # The Aggregated Recovery Metric (ARM) is calculated: ( ( ( ( NDVI + NBR ) / 2) + NDMI ) / 2 )
     band1 = 'NDVI'
@@ -254,18 +249,16 @@ def arm_processing():
     mine_df['id'] = mine_df.ID
     joined_df = mine_df.merge(fin, left_on='id', right_on='ID', how='left')
 
-    # finalDataframe = joined_df.drop(['id','ID_y','sum_y','JUNK'], axis=1, errors='ignore').rename(columns={'ID_x': 'ID', 'sum_x': 'sum'})
     finalDataframe = joined_df.drop(['id', 'ID_y', 'sum_y', 'sum_rnd_y', 'km2_rnd_y', 'US_L4CODE_y'], axis=1, errors='ignore').rename(columns={'ID_x': 'ID', 'sum_x': 'sum', 'sum_rnd_x': 'sum_rnd', 'km2_rnd_x': 'km2_rnd', 'US_L4CODE_x': 'US_L4CODE'})
     finalDataframe = finalDataframe.reindex(columns=cOrder2)
     print(finalDataframe)
 
-    # finalDataframe.to_file(TEMP_DIR+"2025-03-07_lastMined_srHarmonizedMed_rawARM.geojson", driver="GeoJSON")
-    finalDataframe.to_file(TEMP_DIR+"TEST_rawARM.geojson", driver="GeoJSON")
+    finalDataframe.to_file(TEMP_DIR+"2025-03-07_lastMined_srHarmonizedMed_rawARM.geojson", driver="GeoJSON")
 
 
 def arm_upload():
-    infile_name = "TEST_rawARM.geojson"
-    infile = TEMP_DIR+"TEST_rawARM.geojson"
+    infile_name = "2025-03-07_lastMined_srHarmonizedMed_rawARM.geojson"
+    infile = TEMP_DIR + infile_name
 
     bucket_name = GCLOUD_BUCKET
     storage_bucket = storage.Client("skytruth-tech").bucket(bucket_name)
