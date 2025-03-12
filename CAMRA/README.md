@@ -5,3 +5,8 @@ Code for the project was originally written as ipython notebooks, these are pres
 ```shell
 poetry run python CAMRA/sr_annualLastMinedMetrics.py
 ```
+
+2. Run ARM_calculation.py
+```shell
+poetry run python CAMRA/ARM_calculation.py
+```
