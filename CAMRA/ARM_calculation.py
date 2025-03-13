@@ -1,16 +1,12 @@
 import click
+import ee
 import geopandas as gpd
-import numpy as np
 import pandas as pd
 import os
-
 from google.cloud import storage
 
-import ee
-from ee import batch
-
-from config import EE_SERVICE_ACCOUNT, EE_CREDENTIAL_DIR, EE_CREDENTIALS
-from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_CAMRA_DIR, GCLOUD_CAMRA_CSV, GCLOUD_CAMRA_GJS, GCLOUD_CAMRA_ARM, TEMP_DIR
+from config import EE_SERVICE_ACCOUNT, EE_CREDENTIALS
+from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_CAMRA_CSV, GCLOUD_CAMRA_GJS, GCLOUD_CAMRA_ARM, TEMP_DIR
 
 """
 This code is a .py equivalent of the original codes found at CAMRA/Archive/
