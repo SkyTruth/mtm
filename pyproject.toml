@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "mtm"
+version = "2.0"
+description = "Mountaintop Mining"
+authors = ["SkyTruth"]
+license = "Apache License, Version 2.0"
+readme = "README.md"
+package-mode = true
+packages = [
+    { include = "mtm_utils"},
+]
+
+
+[tool.poetry.dependencies]
+cligj = "^0.7.2"
+datetime = "^5.5"
+earthengine-api = "^1.5.5"
+gdal = "^3.10.2"
+fiona = "^1.10.1"
+geopandas = "^1.0.1"
+pandas = "^2.2.3"
+python = ">=3.11,<4"
+requests = "^2.32.3"
+wget = "^3.2"
+click = "^8.1.8"
+
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
