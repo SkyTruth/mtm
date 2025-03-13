@@ -326,7 +326,7 @@ def mask_upload():
     print(f"\n\nBEGINNING MASK UPLOAD TO GCS...")
 
     infile = f"{PROCESSING_YEAR}_Input-Mask_4326.tiff"
-    outfile_name = "A_SECOND_TEST.tiff"  # infile
+    outfile_name = infile
     infile_path = MASK_FINAL + infile
 
     bucket_name = GCLOUD_BUCKET
