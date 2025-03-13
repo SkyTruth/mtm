@@ -1,3 +1,4 @@
+import click
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -19,10 +20,11 @@ This code is a .py equivalent of the original codes found at CAMRA/Archive/
 
 This script was created by Christian Thomas at SkyTruth to calculate the Aggregated Recovery Metric (ARM), which is
 calculated with the following formula:
-        
         ARM = ((((NDVI + NBR) / 2) + NDMI) / 2)
 
-The  script processes the outputs of CAMRA/sr_annualLastMinedMetrics.py
+The script processes the outputs of CAMRA/sr_annualLastMinedMetrics.py
+
+If you encounter issues please contact christian@skytruth.org.
 """
 
 # The ID of your GCS bucket
@@ -30,9 +32,7 @@ storage_client = storage.Client()
 bucket_name = GCLOUD_BUCKET
 storage_bucket = storage_client.bucket(bucket_name)
 
-# print(f"GEE Service Account: {EE_SERVICE_ACCOUNT}\n  > Credentials: {EE_CREDENTIALS}")
 credentials = ee.ServiceAccountCredentials(EE_SERVICE_ACCOUNT, EE_CREDENTIALS)
-# print(bucket_name, storage_bucket)
 
 
 YEARS = list(range(1984, 2020))
@@ -45,36 +45,51 @@ eOrder = base_order + ['US_L4CODE', 'ID', 'geometry']
 cOrder2 = base_order + [f"arm_{y}" for y in YEARS] + ['sum', 'sum_rnd', 'km2_rnd', 'US_L4CODE', 'lastMined', 'ID', 'geometry']
 
 
-# Download the data to a temp dir for processing, delete after final upload
-def tmp_download():
+def tmp_download(file_type: str):
+    """
+    Download the data to a temp dir for processing, delete after final upload
+    """
     os.makedirs(TEMP_DIR, exist_ok=True)
 
-    for f in storage_client.list_blobs(bucket_name, prefix=GCLOUD_CAMRA_GJS):
-        fName = f.name
-        outfile_name = "TMP_"+fName.split("geojson/")[1].strip(".geojson") + "_ARM-processed.geojson"
-        print(f"  > Downloading {f.name} to\n    -->{outfile_name}\n")
-        blob = storage_bucket.blob(f.name)
-        blob.download_to_filename("data/tmp/"+outfile_name)
+    if file_type == "csv":
+        for f in storage_client.list_blobs(bucket_name, prefix=GCLOUD_CAMRA_CSV):
+            fName = f.name
+            outfile_name = "TMP_"+fName.split("csv/")[1]
+            outfile_path = TEMP_DIR + outfile_name
+            
+            # Check if the file already exists before downloading
+            if not os.path.exists(outfile_path):
+                print(f"  > Downloading {f.name} to\n    --> {outfile_name}\n")
+                blob = storage_bucket.blob(f.name)
+                blob.download_to_filename(outfile_path)
+            else:
+                print(f"  > Skipping {outfile_name} (already exists)\n")
     
-    for f in storage_client.list_blobs(bucket_name, prefix=GCLOUD_CAMRA_CSV):
-        fName = f.name
-        outfile_name = "TMP_"+fName.split("csv/")[1].strip(".csv") + "_ARM-processed.csv"
-        print(f"  > Downloading {f.name} to\n    -->{outfile_name}\n")
-        blob = storage_bucket.blob(f.name)
-        blob.download_to_filename("data/tmp/"+outfile_name)
+    else:
+        for f in storage_client.list_blobs(bucket_name, prefix=GCLOUD_CAMRA_GJS):
+            fName = f.name
+            outfile_name = "TMP_"+fName.split("geojson/")[1]
+            outfile_path = TEMP_DIR + outfile_name
+            
+            # Check if the file already exists before downloading
+            if not os.path.exists(outfile_path):
+                print(f"  > Downloading {f.name} to\n    --> {outfile_name}\n")
+                blob = storage_bucket.blob(f.name)
+                blob.download_to_filename(outfile_path)
+            else:
+                print(f"  > Skipping {outfile_name} (already exists)\n")
+
 
 
 def arm_processing():
+    """
+    Calculate ARM for Mine Sites
+    """
     print("Processing ARM data...")
-    infiles = [f for f in os.listdir(TEMP_DIR) if f.endswith(".csv")]
-    # print(infiles)
-
-    epa_df = gpd.read_file(TEMP_DIR+"TMP_2025-03-07_epaEcoregionSite_srHarmonizedMed_metricProcessed_ARM-processed.geojson")
-    # mine_df = pd.read_csv(TEMP_DIR+"TMP_2025-03-07_lastMined_srHarmonizedMed_metricProcessed_ARM-processed.csv")
-    mine_df = gpd.read_file(TEMP_DIR+"TMP_2025-03-07_lastMined_srHarmonizedMed_metricProcessed_ARM-processed.geojson")
-    # mine_df = mine_df.head(5)
 
     er = gpd.read_file("data/ecoregions/geojson/EPA_Ecoregions_level_4.geojson")
+    epa_df = gpd.read_file(TEMP_DIR+"TMP_2025-03-07_epaEcoregionSite_srHarmonizedMed_metricProcessed.geojson")
+    mine_df = gpd.read_file(TEMP_DIR+"TMP_2025-03-07_lastMined_srHarmonizedMed_metricProcessed.geojson")
 
     # Add Level 4 Ecoregion data tp mine_df based on intersection
     mine_df = gpd.overlay(mine_df, er[['geometry', 'US_L4CODE']], how="intersection")
@@ -93,30 +108,25 @@ def arm_processing():
     mine_df = mine_df.reindex(columns=cOrder)
     epa_df = epa_df.reindex(columns=eOrder)
 
-    # ARM Calculation
     """
-    Note:   If your file is processed or ordered differntly, the values in the BAND_DICT may not work. This shouldn't be an 
-            issue for files created using 2020-10-28_sr_annualLastMinedMetrics.ipynb, however if you encounter issues please 
-            contact christian@skytruth.org.
+    ARM CALCULATION
+    Note:   If your file is processed or ordered differntly, the values in the BAND_DICT may not work.
     """
-    ALL_YEARS = list(range(1984, 2020))  # last year with metric data +1
-    # YEARS = list(range(1985, 2016))
-    # DISPLAY_YEARS = list(range(1980, 2021))
 
     BAND_DICT = {
-        'BLUE':  {'titleName': 'BLUE', 'year': ALL_YEARS, 'start': 0, 'end': 36},
-        'EVI':   {'titleName': 'EVI', 'year': ALL_YEARS, 'start': 36, 'end': 72},
-        'GREEN': {'titleName': 'GREEN', 'year': ALL_YEARS, 'start': 72, 'end': 108},
-        'MSAVI': {'titleName': 'MSAVI', 'year': ALL_YEARS, 'start': 108, 'end': 144}, 
-        'NBR2':  {'titleName': 'NBR2', 'year': ALL_YEARS, 'start': 144, 'end': 180},
-        'NBR':   {'titleName': 'NBR', 'year': ALL_YEARS, 'start': 180, 'end': 216},
-        'NDMI':  {'titleName': 'NDMI', 'year': ALL_YEARS, 'start': 216, 'end': 252},
-        'NDVI':  {'titleName': 'NDVI', 'year': ALL_YEARS, 'start': 252, 'end': 288},
-        'NIR':   {'titleName': 'NIR', 'year': ALL_YEARS, 'start': 288, 'end': 324},
-        'RED':   {'titleName': 'RED', 'year': ALL_YEARS, 'start': 324, 'end': 360},
-        'SAVI':  {'titleName': 'SAVI', 'year': ALL_YEARS, 'start': 360, 'end': 396},
-        'SWIR1': {'titleName': 'SWIR1', 'year': ALL_YEARS, 'start': 396, 'end': 432},
-        'SWIR2': {'titleName': 'SWIR2', 'year': ALL_YEARS, 'start': 432, 'end': 468}
+        'BLUE':  {'titleName': 'BLUE', 'year': YEARS, 'start': 0, 'end': 36},
+        'EVI':   {'titleName': 'EVI', 'year': YEARS, 'start': 36, 'end': 72},
+        'GREEN': {'titleName': 'GREEN', 'year': YEARS, 'start': 72, 'end': 108},
+        'MSAVI': {'titleName': 'MSAVI', 'year': YEARS, 'start': 108, 'end': 144}, 
+        'NBR2':  {'titleName': 'NBR2', 'year': YEARS, 'start': 144, 'end': 180},
+        'NBR':   {'titleName': 'NBR', 'year': YEARS, 'start': 180, 'end': 216},
+        'NDMI':  {'titleName': 'NDMI', 'year': YEARS, 'start': 216, 'end': 252},
+        'NDVI':  {'titleName': 'NDVI', 'year': YEARS, 'start': 252, 'end': 288},
+        'NIR':   {'titleName': 'NIR', 'year': YEARS, 'start': 288, 'end': 324},
+        'RED':   {'titleName': 'RED', 'year': YEARS, 'start': 324, 'end': 360},
+        'SAVI':  {'titleName': 'SAVI', 'year': YEARS, 'start': 360, 'end': 396},
+        'SWIR1': {'titleName': 'SWIR1', 'year': YEARS, 'start': 396, 'end': 432},
+        'SWIR2': {'titleName': 'SWIR2', 'year': YEARS, 'start': 432, 'end': 468}
     }
 
     # Set Input Dataframes
@@ -251,34 +261,70 @@ def arm_processing():
 
     finalDataframe = joined_df.drop(['id', 'ID_y', 'sum_y', 'sum_rnd_y', 'km2_rnd_y', 'US_L4CODE_y'], axis=1, errors='ignore').rename(columns={'ID_x': 'ID', 'sum_x': 'sum', 'sum_rnd_x': 'sum_rnd', 'km2_rnd_x': 'km2_rnd', 'US_L4CODE_x': 'US_L4CODE'})
     finalDataframe = finalDataframe.reindex(columns=cOrder2)
-    print(finalDataframe)
 
     finalDataframe.to_file(TEMP_DIR+"2025-03-07_lastMined_srHarmonizedMed_rawARM.geojson", driver="GeoJSON")
 
 
-def arm_upload():
+def arm_upload(to_gcs: bool):
     infile_name = "2025-03-07_lastMined_srHarmonizedMed_rawARM.geojson"
     infile = TEMP_DIR + infile_name
-
     bucket_name = GCLOUD_BUCKET
     storage_bucket = storage.Client("skytruth-tech").bucket(bucket_name)
-
-    out_blob = storage_bucket.blob(GCLOUD_CAMRA_ARM + infile_name)
-
-    if out_blob.exists():
-        print("  > OUTFILE ALREADY EXISTS. PASSING.")
-        pass
+    
+    if to_gcs == False:
+        print(
+            f"Not writing {infile_name} to: {GCLOUD_CAMRA_ARM + infile_name}"
+        )
     else:
-        print("  > OUTFILE DOESN'T EXIST. UPLOADING.")
-        blob = out_blob
-        blob.upload_from_filename(infile, content_type="application/geojson")
-        print(f"  > Outfile {infile_name} uploaded to gs://{GCLOUD_BUCKET}/{GCLOUD_CAMRA_ARM}{infile_name}")
+        out_blob = storage_bucket.blob(GCLOUD_CAMRA_ARM + infile_name)
+        if out_blob.exists():
+            print("  > OUTFILE ALREADY EXISTS. PASSING.")
+            pass
+        else:
+            print("  > OUTFILE DOESN'T EXIST. UPLOADING.")
+            blob = out_blob
+            blob.upload_from_filename(infile, content_type="application/geojson")
+            print(f"  > Outfile {infile_name} uploaded to gs://{GCLOUD_BUCKET}/{GCLOUD_CAMRA_ARM}{infile_name}")
 
 
+def tmp_cleanup(clean_tmp: bool):
+    if clean_tmp == True:
+        print("TMP files can be fairly large, removing them...")
+        files = os.listdir(TEMP_DIR)
+        for file in files:
+            print(f"  Removing: {file}")
+            os.remove(TEMP_DIR + file) # delete all files
+    else:
+        print("Keeping all tmp files.")
 
+
+@click.command()
+@click.option(
+    "--file_type",
+    type=click.Choice(["csv", "geojson"], case_sensitive=False),
+    help="Type of data to downloas. Choose 'csv' or 'geojson' to download. arm_processing() only processes GeoJSON files currently.",
+    required=True,
+    default="geojson"
+)
+@click.option(
+    "--to_gcs",
+    required=True,
+    help="Specify if data will be written to GCS",
+    default=False,
+)
+@click.option(
+    "--clean_tmp",
+    required=True,
+    help="Specify if data in data/tmp/ will be erased after processing is done.",
+    default=True,
+)
+
+def main(file_type: str, to_gcs: bool, clean_tmp: bool):
+    tmp_download(file_type=file_type)
+    arm_processing()
+    arm_upload(to_gcs=to_gcs)
+    tmp_cleanup(clean_tmp=clean_tmp)
 
 
 if __name__ == "__main__":
-    # tmp_download()
-    # arm_processing()
-    arm_upload()
+    main()

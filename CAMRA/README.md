@@ -8,5 +8,5 @@ poetry run python CAMRA/sr_annualLastMinedMetrics.py
 
 2. Run ARM_calculation.py
 ```shell
-poetry run python CAMRA/ARM_calculation.py
+poetry run python CAMRA/ARM_calculation.py --file_type geojson --to_gcs True --clean_tmp True
 ```
