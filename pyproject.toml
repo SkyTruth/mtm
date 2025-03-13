@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mtm"
-version = "1.0"
+version = "2.0"
 description = "Mountaintop Mining"
 authors = ["SkyTruth"]
 license = "Apache License, Version 2.0"
