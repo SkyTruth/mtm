@@ -1,8 +1,8 @@
 import datetime
 
-# PROCESSING_YEAR = datetime.date.today().year
+PROCESSING_YEAR = datetime.date.today().year
 # Uncomment line below to set the processing year, otherwise processing_year = current year
-PROCESSING_YEAR = 2022
+# PROCESSING_YEAR = 2022
 """
 Setting Up Local Directories For Mask Creation
 """
