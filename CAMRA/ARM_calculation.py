@@ -14,9 +14,6 @@ from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_CAMRA_DIR, GCLOUD_CAMRA_CS
 
 """
 This code is a .py equivalent of the original codes found at CAMRA/Archive/
-    - 2021-03-09_comprehensiveProcessing_noEcoregion_noLastMined.ipynb
-    - 2021-03-09_comprehensiveProcessing_withEcoregion_noLastMined.ipynb
-    - 2021-03-09_comprehensiveProcessing_withEcoregion_withLastMined.ipynb
 
 This script was created by Christian Thomas at SkyTruth to calculate the Aggregated Recovery Metric (ARM), which is
 calculated with the following formula:
@@ -31,15 +28,12 @@ If you encounter issues please contact christian@skytruth.org.
 storage_client = storage.Client()
 bucket_name = GCLOUD_BUCKET
 storage_bucket = storage_client.bucket(bucket_name)
-
 credentials = ee.ServiceAccountCredentials(EE_SERVICE_ACCOUNT, EE_CREDENTIALS)
-
 
 YEARS = list(range(1984, 2020))
 BANDS = ['B', 'EVI', 'G', 'MSAVI', 'NBR2', 'NBR', 'NDMI', 'NDVI', 'NIR', 'R', 'SAVI', 'SWIR1', 'SWIR2']
 
 base_order = [f"{b}_{y}" for b in BANDS for y in YEARS]
-
 cOrder = base_order + ['sum', 'sum_rnd', 'km2_rnd', 'US_L4CODE', 'lastMined', 'ID', 'geometry']
 eOrder = base_order + ['US_L4CODE', 'ID', 'geometry']
 cOrder2 = base_order + [f"arm_{y}" for y in YEARS] + ['sum', 'sum_rnd', 'km2_rnd', 'US_L4CODE', 'lastMined', 'ID', 'geometry']
@@ -78,7 +72,6 @@ def tmp_download(file_type: str):
                 blob.download_to_filename(outfile_path)
             else:
                 print(f"  > Skipping {outfile_name} (already exists)\n")
-
 
 
 def arm_processing():
