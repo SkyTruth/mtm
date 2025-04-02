@@ -1,5 +1,5 @@
 '''
-Splits centerlines into segments of approximately 100m, with no segment shorter than 50m.
+Splits skeletons into segments of approximately 100m, with no segment shorter than 50m.
 Run this after get_skeletons.py.
 '''
 
