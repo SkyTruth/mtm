@@ -6,3 +6,9 @@ All code should be run from the `mtm/` directory
 ```shell
 poetry run python MTM_Annual_Extent/code/mask_creation.py
 ```
+
+# Annual Mine Footprint Detection
+1. greenestComp.py --> creates annual greenest pixel composites and exports them to GCS.
+```shell
+poetry run python MTM_Annual_Extent/code/greenestComp.py
+```
