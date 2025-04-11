@@ -7,13 +7,13 @@ The code in this repository is not yet ready to be replicated by other users. Th
 [Read the full report and documentation here.](https://docs.google.com/document/d/1bMBGrUBo6LNwxNrPXTVW6mD1SCKbbWqQ_B9PEYEKGdk/edit?usp=sharing)
 
 ### Scripts in order of use
-1. scraper.ipynb --> Uses a list of tile IDs to scrape the corresponding LAZ files from the USGS database into the GCS bucket.
-2. scraper_ky.ipynb --> Uses a list of tile IDs to scrape the corresponding LAZ files from Kentucky’s LiDAR database into the GCS bucket.
+1. scraper.ipynb --> Uses a list of tile IDs to scrape the corresponding LAZ files from the USGS database into a GCS bucket.
+2. scraper_ky.ipynb --> Uses a list of tile IDs to scrape the corresponding LAZ files from Kentucky’s LiDAR database into a GCS bucket.
 3. req.txt --> Contains all packages to install to the virtual environment, with the exception of whitebox and gcsfuse.
 4. mount.py --> Mounts the mountaintop_mining bucket as a directory in the VM.
-5. decomp_iterative.py --> Decompresses LAZ files into LAS files by county, iterating through a list of counties.
-6. decomp_iterative_repro.py --> Decompresses LAZ files into LAS files by county, iterating through a list of counties. Additionally reprojects all LAS files to EPSG:6350. Used for West Virginia counties.
-7. proc_iterative.py --> Produces a mosaicked CHM, DTM, and DSM for each county from the county’s set of LAS files, iterating through a list of counties. Reprojects all rasters to EPSG:3857.
+5. decompress.py --> Decompresses LAZ files into LAS files by county, iterating through a list of counties.
+6. decompress_reproject.py --> Decompresses LAZ files into LAS files by county, iterating through a list of counties. Additionally reprojects all LAS files to EPSG:6350. Used for West Virginia counties.
+7. process_chm.py --> Produces a mosaicked CHM, DTM, and DSM for each county from the county’s set of LAS files, iterating through a list of counties. Reprojects all rasters to EPSG:3857.
 8. hole_patch.py --> Fills holes from missing tiles in county rasters by re-processing those tiles and mosaicking them into the original raster. Additionally interpolates any remaining small gaps. Requires identifying and listing the missing tiles using a tile index.
 9. gap_fill.py --> Interpolates small gaps in rasters, typically from water features.
 10. point_density.py --> Takes a random sample of 50 LAZ tiles from a LiDAR project and calculates the average point density.

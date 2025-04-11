@@ -1,3 +1,8 @@
+'''
+Fills holes from missing tiles in county rasters by re-processing those tiles and mosaicking them into the original raster.
+Additionally interpolates any remaining small gaps. Requires identifying and listing the missing tiles using a tile index.
+'''
+
 # Import necessary modules
 import os
 import laspy
@@ -7,9 +12,11 @@ from osgeo import gdal, ogr, osr
 import pyproj
 from pyproj import CRS, Proj, transform
 
+from mtm_utils.variables import MISSING_TILES
+
 state = 'wv'
 county = 'putnam'
-tile_IDs = ['17SMC20005100', '17SMC20005250', '17SMC20005400', '17SMC20005850', '17SMC18505850', '17SMC17005850', '17SMC17006000', '17SMC17006150', '17SMC15506150', '17SMC14006150', '17SMC12506150', '17SMC11006150', '17SMC11006450', '17SMC09506450', '17SMC06506600', '17SMC08006600', '17SMC08006750', '17SMC08006900', '17SMC08007200', '17SMC08007350', '17SMC08007500', '17SMC09507500', '17SMC09507350', '17SMC11007500']
+tile_IDs = MISSING_TILES
 rasters = [['dsm', 'dsm_mosaic'], ['dtm', 'dtm_mosaic'], ['chm', 'chm']]
 
 # Define function to assign source CRS based on lidar project (for WV tiles only)

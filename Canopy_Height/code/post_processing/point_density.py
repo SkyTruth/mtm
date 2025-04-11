@@ -1,3 +1,7 @@
+'''
+Takes a random sample of 50 LAZ tiles from a LiDAR project and calculates the average point density.
+'''
+
 # Import necessary modules
 import os
 import re

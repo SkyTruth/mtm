@@ -1,3 +1,7 @@
+'''
+Converts a raster into a Cloud Optimized GeoTIFF so that it can be imported as an Earth Engine asset.
+'''
+
 import subprocess
 import os
 from osgeo import gdal

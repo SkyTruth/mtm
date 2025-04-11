@@ -1,28 +1,36 @@
-# Pre-reqs:
-# -- mount GCS bucket with mount.py
-# -- decompress lidar tiles with decomp_iterative.py
+'''
+Produces a mosaicked CHM, DTM, and DSM for each county from the county’s set of LAS files,
+iterating through a list of counties. Reprojects all rasters to EPSG:3857.
+'''
 
-# Select state and counties
-state = 'wv'
-
-counties = [
-]
-
-# Import packages
 import os
 import subprocess
 import time
 from osgeo import gdal, ogr, osr
 whitebox_executable = os.path.abspath('whitebox-tools-master/target/release/whitebox_tools')
 
-# Assign source CRS based on state
+from mtm_utils.variables import (
+    TN_COUNTIES,
+    KY_COUNTIES,
+    VA_COUNTIES,
+    WV_COUNTIES
+)
+
+# Select state
+state = 'tn'
+
+# Assign counties and source CRS based on state
 if state == 'tn':
+    counties = TN_COUNTIES
     source_crs = 'EPSG:6576'
-elif state == 'va':
-    source_crs = 'EPSG:6346'
 elif state == 'ky':
+    counties = KY_COUNTIES
     source_crs = 'EPSG:3089'
+elif state == 'va':
+    counties = VA_COUNTIES
+    source_crs = 'EPSG:6346'
 elif state == 'wv':
+    counties = WV_COUNTIES
     source_crs = 'EPSG:6350'
 
 # Assign resolution based on state

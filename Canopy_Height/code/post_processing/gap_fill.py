@@ -1,10 +1,27 @@
+'''
+Interpolates small gaps in rasters, typically from water features.
+'''
+
 import os
 import subprocess
 
+from mtm_utils.variables import (
+    WV_COUNTIES,
+    TN_COUNTIES,
+    KY_COUNTIES,
+    VA_COUNTIES
+)
+
 state = 'wv'
-counties = [
-'lincoln'
-]
+
+if state == 'wv':
+    counties = WV_COUNTIES
+elif state == 'tn':
+    counties = TN_COUNTIES
+elif state == 'ky':
+    counties = KY_COUNTIES
+elif state == 'va':
+    counties = VA_COUNTIES
 
 rasters = [['dsm', 'dsm_mosaic'], ['dtm', 'dtm_mosaic'], ['chm', 'chm']]
 whitebox_executable = os.path.abspath('whitebox-tools-master/target/release/whitebox_tools')
