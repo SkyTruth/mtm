@@ -5,8 +5,12 @@ data/maskData/interimMask/*
 data/maskData/finalMask/*
 data/USCB_Data/
 data/tmp/
+data/gcs/
 config.py
 ToDo.txt
 Highwall_Detection/code/inputs/*
 Highwall_Detection/code/temps/*
 Highwall_Detection/code/outputs/*
+.DS_Store
+Highwall_Detection/.DS_Store
+Highwall_Detection/code/.DS_Store

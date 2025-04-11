@@ -12,7 +12,16 @@ from osgeo import gdal, ogr, osr
 import pyproj
 from pyproj import CRS, Proj, transform
 
-from mtm_utils.variables import MISSING_TILES
+from mtm_utils.variables import (
+    GCLOUD_BUCKET,
+    GCS_MOUNT,
+    MISSING_TILES,
+    LIDAR_DIR
+)
+
+# Mount GCS bucket
+os.makedirs(GCS_MOUNT, exist_ok=True)
+subprocess.run(['gcsfuse', '--implicit-dirs', GCLOUD_BUCKET, GCS_MOUNT])
 
 state = 'wv'
 county = 'putnam'
@@ -40,7 +49,7 @@ if state == 'wv':
         las.header.add_crs(target_crs)
 
 # Decompress tiles, reprojecting if necessary
-dir = f'/home/alanal/gcs/lidar_data/{state}/'
+dir = f'{LIDAR_DIR}/{state}/'
 def decompress(fn, source_crs):
         for ID in tile_IDs:
                 if fn.endswith(f'_{ID}.laz'):
@@ -84,7 +93,7 @@ else:
 
 whitebox_executable = os.path.abspath('whitebox-tools-master/target/release/whitebox_tools')
 
-dir = f"/home/alanal/gcs/lidar_data/{state}/{county}/"
+dir = f"{LIDAR_DIR}/{state}/{county}/"
 
 os.makedirs(f'{dir}hole_dsms', exist_ok=True)
 os.makedirs(f'{dir}hole_dtms', exist_ok=True)

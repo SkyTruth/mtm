@@ -71,7 +71,10 @@ GCLOUD_FINAL_DATA_GEOTIFF_CUMULATIVE = GCLOUD_FINAL_DATA_DIR + "GEOTIFF_CUMULATI
 Canopy Height Variables
 """
 
-PROJECT_ID = "skytruth-tech"
+GCS_MOUNT = 'data/gcs'
+LIDAR_DIR = GCS_MOUNT + '/lidar_data/'
+TILE_IDS_DIR = LIDAR_DIR + 'tile_IDs/'
+FINAL_MOSAICS_DIR = LIDAR_DIR + 'final_mosaics/'
 
 WV_COUNTIES = ['boone','cabell','clay','fayette','greenbrier','kanawha','lincoln','logan',
                'mason','mcdowell','mercer','mingo','nicholas','pocahontas','putnam','raleigh',

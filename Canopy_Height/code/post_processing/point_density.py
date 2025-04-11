@@ -11,6 +11,16 @@ from multiprocessing import Pool
 import subprocess
 import whitebox
 
+from mtm_utils.variables import (
+    GCLOUD_BUCKET,
+    GCS_MOUNT,
+    LIDAR_DIR
+)
+
+# Mount GCS bucket
+os.makedirs(GCS_MOUNT, exist_ok=True)
+subprocess.run(['gcsfuse', '--implicit-dirs', GCLOUD_BUCKET, GCS_MOUNT])
+
 whitebox_executable = os.path.abspath('whitebox-tools-master/target/release/whitebox_tools')
 
 # Select state and lidar acquisition project
@@ -42,7 +52,7 @@ def process_file(fn):
                     return point_density
 
 # Take a random sample of 50 tiles
-dir = f'/home/alanal/gcs/lidar_data/{state}/'
+dir = f'{LIDAR_DIR}/{state}/'
 all_files = [fn for fn in os.listdir(dir) if project in fn]
 sample_files = random.sample(all_files, 50)
 

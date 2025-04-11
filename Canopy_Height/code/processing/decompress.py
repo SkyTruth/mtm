@@ -12,10 +12,17 @@ import time
 
 from mtm_utils.variables import (
     GCLOUD_BUCKET,
+    GCS_MOUNT,
+    LIDAR_DIR,
+    TILE_IDS_DIR,
     TN_COUNTIES,
     KY_COUNTIES,
     VA_COUNTIES
 )
+
+# Mount GCS bucket
+os.makedirs(GCS_MOUNT, exist_ok=True)
+subprocess.run(['gcsfuse', '--implicit-dirs', GCLOUD_BUCKET, GCS_MOUNT])
 
 # Select state
 state = 'tn'
@@ -30,7 +37,7 @@ elif state == 'va':
 for county in counties:
 
         # Get list of tile IDs from county
-        df = pd.read_csv(f'/home/alanal/gcs/lidar_data/tile_IDs/{county}.csv', header=0)
+        df = pd.read_csv(f'{TILE_IDS_DIR}/{county}.csv', header=0)
         tile_IDs = df.iloc[:, 0].tolist()
 
         # Count tile IDs and check for duplicates
@@ -49,7 +56,7 @@ for county in counties:
         print(list(duplicates))
 
         # Create county directory and subdirectories for storing files in bucket
-        dir = f'/home/alanal/gcs/lidar_data/{state}/'
+        dir = f'{LIDAR_DIR}/{state}/'
         county_dir = f'{dir}{county}/las'
         os.makedirs(f'{dir}{county}', exist_ok=True)
         os.makedirs(f'{dir}{county}/las', exist_ok=True)

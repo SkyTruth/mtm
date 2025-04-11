@@ -4,6 +4,7 @@ Additionally reprojects all LAS files to EPSG:6350. Used for West Virginia count
 '''
 
 import os
+import subprocess
 import laspy
 from multiprocessing import Pool
 import pandas as pd
@@ -13,16 +14,15 @@ from pyproj import CRS, Proj, transform
 
 from mtm_utils.variables import (
     GCLOUD_BUCKET,
-    PROJECT_ID,
+    GCS_MOUNT,
+    LIDAR_DIR,
+    TILE_IDS_DIR,
     WV_COUNTIES
 )
 
-# Initialize Google Cloud Storage client
-from google.cloud import storage
-client = storage.Client(project=PROJECT_ID)
-
-# Access bucket
-bucket = client.get_bucket(GCLOUD_BUCKET)
+# Mount GCS bucket
+os.makedirs(GCS_MOUNT, exist_ok=True)
+subprocess.run(['gcsfuse', '--implicit-dirs', GCLOUD_BUCKET, GCS_MOUNT])
 
 state = 'wv'
 counties = WV_COUNTIES
@@ -50,7 +50,7 @@ def reproject(las, source_crs):
 for county in counties:
 
         # Get list of tile IDs from county
-        df = pd.read_csv(f'/home/alanal/gcs/lidar_data/tile_IDs/{county}.csv', header=0)
+        df = pd.read_csv(f'{TILE_IDS_DIR}/{county}.csv', header=0)
         tile_IDs = df.iloc[:, 0].tolist()
         
         # Count tile IDs and check for duplicates
@@ -69,7 +69,7 @@ for county in counties:
         print(list(duplicates))
 
         # Create county directory and subdirectories for storing files
-        dir = f'/home/alanal/gcs/lidar_data/{state}/'
+        dir = f'{LIDAR_DIR}/{state}/'
         county_dir = f'{dir}{county}/las'
         os.makedirs(f'{dir}{county}', exist_ok=True)
         os.makedirs(f'{dir}{county}/las', exist_ok=True)

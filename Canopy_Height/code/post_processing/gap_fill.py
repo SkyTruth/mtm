@@ -6,11 +6,18 @@ import os
 import subprocess
 
 from mtm_utils.variables import (
+    GCLOUD_BUCKET,
+    GCS_MOUNT,
+    LIDAR_DIR,
     WV_COUNTIES,
     TN_COUNTIES,
     KY_COUNTIES,
     VA_COUNTIES
 )
+
+# Mount GCS bucket
+os.makedirs(GCS_MOUNT, exist_ok=True)
+subprocess.run(['gcsfuse', '--implicit-dirs', GCLOUD_BUCKET, GCS_MOUNT])
 
 state = 'wv'
 
@@ -32,7 +39,7 @@ else:
     suffix = '3857'
 
 for county in counties:
-    dir = f"/home/alanal/gcs/lidar_data/{state}/{county}/"
+    dir = f"{LIDAR_DIR}/{state}/{county}/"
     for raster in rasters:
         fill_gaps = [
             whitebox_executable,

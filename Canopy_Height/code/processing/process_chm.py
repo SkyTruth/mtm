@@ -10,11 +10,18 @@ from osgeo import gdal, ogr, osr
 whitebox_executable = os.path.abspath('whitebox-tools-master/target/release/whitebox_tools')
 
 from mtm_utils.variables import (
+    GCLOUD_BUCKET,
+    GCS_MOUNT,
+    LIDAR_DIR,
     TN_COUNTIES,
     KY_COUNTIES,
     VA_COUNTIES,
     WV_COUNTIES
 )
+
+# Mount GCS bucket
+os.makedirs(GCS_MOUNT, exist_ok=True)
+subprocess.run(['gcsfuse', '--implicit-dirs', GCLOUD_BUCKET, GCS_MOUNT])
 
 # Select state
 state = 'tn'
@@ -46,7 +53,7 @@ for county in counties:
     start_time = time.time()
 
     # Define variables
-    dir = f"/home/alanal/gcs/lidar_data/{state}/{county}/"
+    dir = f"{LIDAR_DIR}/{state}/{county}/"
 
     # Create DSM using all surface points
     dsm = [
