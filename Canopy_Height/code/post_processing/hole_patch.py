@@ -7,21 +7,16 @@ Additionally interpolates any remaining small gaps. Requires identifying and lis
 import os
 import laspy
 from multiprocessing import Pool
-import subprocess
 from osgeo import gdal, ogr, osr
 import pyproj
 from pyproj import CRS, Proj, transform
+import whitebox
+wbt = whitebox.WhiteboxTools()
 
 from mtm_utils.variables import (
-    GCLOUD_BUCKET,
-    GCS_MOUNT,
     MISSING_TILES,
     LIDAR_DIR
 )
-
-# Mount GCS bucket
-os.makedirs(GCS_MOUNT, exist_ok=True)
-subprocess.run(['gcsfuse', '--implicit-dirs', GCLOUD_BUCKET, GCS_MOUNT])
 
 state = 'wv'
 county = 'putnam'
@@ -91,88 +86,68 @@ if state == 'tn' or state == 'ky':
 else:
     res = 10
 
-whitebox_executable = os.path.abspath('whitebox-tools-master/target/release/whitebox_tools')
+dir = os.path.abspath(f"{LIDAR_DIR}/{state}/{county}")
 
-dir = f"{LIDAR_DIR}/{state}/{county}/"
-
-os.makedirs(f'{dir}hole_dsms', exist_ok=True)
-os.makedirs(f'{dir}hole_dtms', exist_ok=True)
+os.makedirs(f'{dir}/hole_dsms', exist_ok=True)
+os.makedirs(f'{dir}/hole_dtms', exist_ok=True)
 
 def dsm_dtm(fn):
         for ID in tile_IDs:
                 if fn.endswith(f'_{ID}.las'):
                     outfile = fn.replace(".las", ".tif")
                     # Create DSM using all surface points.
-                    dsm = [
-                        whitebox_executable,
-                        '--run="lidar_digital_surface_model"',
-                        f'--i="{dir}las/{fn}"',
-                        f'--o="{dir}hole_dsms/{outfile}"',
-                        f'--resolution={res}',
-                        '--radius=0.5'
-                    ]
-                    process = subprocess.run(dsm)
+                    wbt.lidar_digital_surface_model(
+                        i=f"{dir}/las/{fn}",
+                        output=f"{dir}/hole_dsms/{outfile}",
+                        resolution=res,
+                        radius=0.5
+                    )
                     
                     # Create DTM using all ground points
-                    dtm = [
-                        whitebox_executable,
-                        '--run="lidar_tin_gridding"',
-                        f'--i="{dir}las/{fn}"',
-                        f'--o="{dir}hole_dtms/{outfile}"',
-                        '--parameter="elevation"',
-                        '--returns="all"',
-                        f'--resolution={res}',
-                        '--exclude_cls="0,1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18"'
-                    ]
-                    process = subprocess.run(dtm)
+                    wbt.lidar_tin_gridding(
+                        i=f"{dir}/las/{fn}",
+                        output=f"{dir}/hole_dtms/{outfile}",
+                        parameter="elevation",
+                        returns="all",
+                        resolution=res,
+                        exclude_cls="0,1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18"
+                    )
 
 print(f"Creating DSMs and DTMs...")
 num_processes = 16
 with Pool(num_processes) as pool:
-        pool.map(dsm_dtm, os.listdir(f'{dir}las/'))
+        pool.map(dsm_dtm, os.listdir(f'{dir}/las/'))
 print("DSMs and DTMs created successfully.")
 
 # Mosaic all DSMs into one continuous surface model
-mosaic_dsm = [
-    whitebox_executable,
-    '--run="mosaic"',
-    f'--wd="{dir}hole_dsms"',
-    f'--output="{dir}dsm/{county}_holes_dsm_mosaic.tif"'
-]
-
 print(f"Mosaicking DSMs...")
-process = subprocess.run(mosaic_dsm)
+wbt.set_working_dir(f"{dir}/hole_dsms")
+wbt.mosaic(
+    output=f"{dir}/dsm/{county}_holes_dsm_mosaic.tif"
+)
 print(f"DSM mosaic created successfully.")
 
 # Mosaic all DTMs into one continous terrain model
-mosaic_dtm = [
-    whitebox_executable,
-    '--run="mosaic"',
-    f'--wd="{dir}hole_dtms"',
-    f'--output="{dir}dtm/{county}_holes_dtm_mosaic.tif"'
-]
-
 print(f"Mosaicking DTMs...")
-process = subprocess.run(mosaic_dtm)
+wbt.set_working_dir(f"{dir}/hole_dtms")
+wbt.mosaic(
+    output=f"{dir}/dtm/{county}_holes_dtm_mosaic.tif"
+)
 print(f"DTM mosaic created successfully.")
     
 # Subtract DTM from DSM to get Canopy Height Model (CHM)
-subtract = [
-    whitebox_executable,
-    '--run="subtract"',
-    f'--input1="{dir}dsm/{county}_holes_dsm_mosaic.tif"',
-    f'--input2="{dir}dtm/{county}_holes_dtm_mosaic.tif"',
-    f'--output="{dir}chm/{county}_holes_chm.tif"'
-]
-
 print(f"Creating CHM...")
-process = subprocess.run(subtract)
+wbt.subtract(
+    input1=f"{dir}/dsm/{county}_holes_dsm_mosaic.tif",
+    input2=f"{dir}/dtm/{county}_holes_dtm_mosaic.tif",
+    output=f"{dir}/chm/{county}_holes_chm.tif"
+)
 print(f"CHM created successfully.")
 
 # Reproject holes CHM, DSM, and DTM to 3857
 for raster in rasters:
     print(f"Reprojecting {raster[0]}...")
-    gdal.Warp(destNameOrDestDS=f"{dir}{raster[0]}/{county}_holes_{raster[1]}_3857.tif", srcDSOrSrcDSTab=f"{dir}{raster[0]}/{county}_holes_{raster[1]}.tif",
+    gdal.Warp(destNameOrDestDS=f"{dir}/{raster[0]}/{county}_holes_{raster[1]}_3857.tif", srcDSOrSrcDSTab=f"{dir}/{raster[0]}/{county}_holes_{raster[1]}.tif",
                     options=f"-overwrite -s_srs {source_crs} -t_srs EPSG:3857 -tr 10.0 10.0 -r near -of GTiff")
     print(f"{raster[0]} reprojected.")
 
@@ -180,41 +155,31 @@ for raster in rasters:
     # For Kentucky and Tennessee: must convert feet to meters for all 3 data products
     suffix = '3857'
     if state == 'ky' or state == 'tn':
-        convert = [
-            whitebox_executable,
-            '--run="multiply"',
-            f'--input1="{dir}{raster[0]}/{county}_holes_{raster[1]}_3857.tif"',
-            '--input2=0.3048',
-            f'--output="{dir}{raster[0]}/{county}_holes_{raster[1]}_meters.tif"'
-        ]
         print(f"Converting {raster[0]} to meters...")
-        process = subprocess.run(convert)
+        wbt.multiply(
+            input1=f"{dir}/{raster[0]}/{county}_holes_{raster[1]}_3857.tif",
+            input2=0.3048,
+            output=f"{dir}/{raster[0]}/{county}_holes_{raster[1]}_meters.tif"
+        )
         print(f"{raster[0]} converted to meters.")
         suffix = 'meters'
 
     # Mosaic the holes into the original raster
-    patch_holes = [
-        whitebox_executable,
-        '--run="mosaic"',
-        f'--inputs="{dir}{raster[0]}/{county}_{raster[1]}_{suffix}.tif", "{dir}{raster[0]}/{county}_holes_{raster[1]}_{suffix}.tif"',
-        f'--output="{dir}{raster[0]}/{county}_patched_{raster[1]}_{suffix}.tif"',
-        '--method="nn"'
-    ]
     print(f"Patching holes in {raster[0]}...")
-    process = subprocess.run(patch_holes)
+    wbt.mosaic(
+        i=f"{dir}/{raster[0]}/{county}_{raster[1]}_{suffix}.tif, {dir}/{raster[0]}/{county}_holes_{raster[1]}_{suffix}.tif",
+        output=f"{dir}/{raster[0]}/{county}_patched_{raster[1]}_{suffix}.tif",
+        method="nn"
+    )
     print(f"Holes in {raster[0]} patched.")
 
     # Interpolate any remaining gaps, including bodies of water
-    fill_gaps = [
-        whitebox_executable,
-        '--run="FillMissingData"',
-        f'--i="{dir}{raster[0]}/{county}_patched_{raster[1]}_{suffix}.tif"', 
-        f'--output="{dir}{raster[0]}/{county}_FINAL_{raster[1]}.tif"', 
-        '--filter=25', 
-        '--weight=3.0', 
-        '--no_edges=True',
-    ]
-
     print(f"Filling gaps in {raster[0]} ...")
-    process = subprocess.run(fill_gaps)
+    wbt.fill_missing_data(
+        i=f"{dir}/{raster[0]}/{county}_patched_{raster[1]}_{suffix}.tif",
+        output=f"{dir}/{raster[0]}/{county}_FINAL_{raster[1]}.tif",
+        filter=25,
+        weight=3.0,
+        no_edges=True
+    )
     print(f"Gaps in {raster[0]} filled.")

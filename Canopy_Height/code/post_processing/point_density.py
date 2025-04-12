@@ -8,39 +8,26 @@ import re
 import statistics
 import random
 from multiprocessing import Pool
-import subprocess
+from functools import partial
 import whitebox
+wbt = whitebox.WhiteboxTools()
 
 from mtm_utils.variables import (
-    GCLOUD_BUCKET,
-    GCS_MOUNT,
     LIDAR_DIR
 )
 
-# Mount GCS bucket
-os.makedirs(GCS_MOUNT, exist_ok=True)
-subprocess.run(['gcsfuse', '--implicit-dirs', GCLOUD_BUCKET, GCS_MOUNT])
-
-whitebox_executable = os.path.abspath('whitebox-tools-master/target/release/whitebox_tools')
-
-# Select state and lidar acquisition project
-state = "tn"
-project = "B3"
-
 # Calculate point density and extract it from the output html file
-def process_file(fn):
-    print(f'{dir}{fn}')
+def process_file(fn, dir):
+    print(f'{dir}/{fn}')
     output_html = os.path.join(dir, fn.replace('.laz', '.html'))
-    lidar_info = [
-        whitebox_executable,
-        '--run="LidarInfo"',
-        f'--input="{dir}{fn}"',
-        f'--output="{output_html}"',
-        '--density=True',
-        '--vlr=False',
-        'geokeys=False'
-    ]
-    process = subprocess.run(lidar_info)
+
+    wbt.lidar_info(
+        i=f"{dir}/{fn}",
+        output=output_html,
+        density=True,
+        vlr=False,
+        geokeys=False
+    )
 
     with open(output_html, 'r') as file:
         for line in file:
@@ -51,29 +38,38 @@ def process_file(fn):
                     point_density = float(match.group(1))
                     return point_density
 
-# Take a random sample of 50 tiles
-dir = f'{LIDAR_DIR}/{state}/'
-all_files = [fn for fn in os.listdir(dir) if project in fn]
-sample_files = random.sample(all_files, 50)
+def main():
+    # Select state and lidar acquisition project
+    state = "tn"
+    project = "B3"
 
-with Pool() as pool:
-    point_densities = pool.map(process_file, sample_files)
+    # Take a random sample of 50 tiles
+    dir = os.path.abspath(f'{LIDAR_DIR}/{state}')
+    all_files = [fn for fn in os.listdir(dir) if project in fn]
+    sample_files = random.sample(all_files, 50)
 
-# Remove None values (files where average point density couldn't be found)
-point_densities = [density for density in point_densities if density is not None]
+    # Process files in parallel
+    with Pool() as pool:
+        point_densities = pool.map(partial(process_file, dir=dir), sample_files)
 
-print(point_densities)
+    # Remove None values (files where average point density couldn't be found)
+    point_densities = [density for density in point_densities if density is not None]
 
-# Calculate and print summary statistics
-mean_density = statistics.mean(point_densities)
-median_density = statistics.median(point_densities)
-min_density = min(point_densities)
-max_density = max(point_densities)
-std_dev_density = statistics.stdev(point_densities)
+    print(point_densities)
 
-print(f"Summary Statistics:")
-print(f"Mean: {mean_density}")
-print(f"Median: {median_density}")
-print(f"Min: {min_density}")
-print(f"Max: {max_density}")
-print(f"Standard Deviation: {std_dev_density}")
+    # Calculate and print summary statistics
+    mean_density = statistics.mean(point_densities)
+    median_density = statistics.median(point_densities)
+    min_density = min(point_densities)
+    max_density = max(point_densities)
+    std_dev_density = statistics.stdev(point_densities)
+
+    print(f"Summary Statistics:")
+    print(f"Mean: {mean_density}")
+    print(f"Median: {median_density}")
+    print(f"Min: {min_density}")
+    print(f"Max: {max_density}")
+    print(f"Standard Deviation: {std_dev_density}")
+
+if __name__ == '__main__':
+    main()

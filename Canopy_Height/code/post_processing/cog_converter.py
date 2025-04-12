@@ -7,14 +7,8 @@ import subprocess
 from osgeo import gdal
 
 from mtm_utils.variables import (
-    GCLOUD_BUCKET,
-    GCS_MOUNT,
     FINAL_MOSAICS_DIR
 )
-
-# Mount GCS bucket
-os.makedirs(GCS_MOUNT, exist_ok=True)
-subprocess.run(['gcsfuse', '--implicit-dirs', GCLOUD_BUCKET, GCS_MOUNT])
 
 # Create progress callback
 def progress_callback(complete, message, unknown):
