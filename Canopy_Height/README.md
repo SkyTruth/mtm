@@ -18,3 +18,13 @@ The code in this repository is not yet ready to be replicated by other users. Th
 9. gap_fill.py --> Interpolates small gaps in rasters, typically from water features.
 10. point_density.py --> Takes a random sample of 50 LAZ tiles from a LiDAR project and calculates the average point density.
 11. cog_converter.py --> Converts a raster into a Cloud Optimized GeoTIFF so that it can be imported as an Earth Engine asset.
+
+
+
+Setting up gcsfuse on macOS
+
+brew install --cask macfuse
+brew install go
+go install github.com/googlecloudplatform/gcsfuse@master
+export PATH="$HOME/go/bin:$PATH"
+allow software from Benjaming Fleisher in settings (Privacy and Security) and restart computer
