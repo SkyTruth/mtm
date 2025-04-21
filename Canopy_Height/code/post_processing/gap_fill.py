@@ -3,29 +3,17 @@ Interpolates small gaps in rasters, typically from water features.
 '''
 
 import os
-import whitebox
-wbt = whitebox.WhiteboxTools()
+import subprocess
+whitebox_executable = os.path.abspath('whitebox-tools-master/target/release/whitebox_tools')
 
-from mtm_utils.variables import (
-    LIDAR_DIR,
-    WV_COUNTIES,
-    TN_COUNTIES,
-    KY_COUNTIES,
-    VA_COUNTIES
+from Canopy_Height.code.ch_variables import (
+    RASTERS,
+    MAIN_DIR
 )
 
-state = 'tn'
-
-if state == 'wv':
-    counties = WV_COUNTIES
-elif state == 'tn':
-    counties = TN_COUNTIES
-elif state == 'ky':
-    counties = KY_COUNTIES
-elif state == 'va':
-    counties = VA_COUNTIES
-
-rasters = [['dsm', 'dsm_mosaic'], ['dtm', 'dtm_mosaic'], ['chm', 'chm']]
+# Specify state and counties that need gap filling
+state = 'wv'
+counties = []
 
 if state == 'ky' or state == 'tn':
     suffix = 'meters'
@@ -33,17 +21,18 @@ else:
     suffix = '3857'
 
 for county in counties:
-    dir = os.path.abspath(f"{LIDAR_DIR}{state}/{county}/")
-    for raster in rasters:
+    county_dir = f"{MAIN_DIR}/{state}/{county}"
+    for raster in RASTERS:
+        fill_gaps = [
+            whitebox_executable,
+            '--run="FillMissingData"',
+            f'--i="{county_dir}/{raster[0]}/{county}_{raster[1]}_{suffix}.tif"', 
+            f'--output="{county_dir}/{raster[0]}/{county}_FINAL_{raster[1]}.tif"', 
+            '--filter=50', 
+            '--weight=3.0', 
+            '--no_edges=True',
+        ]
 
         print(f"Filling gaps in {raster[0]} ...")
-        input_raster = f"{dir}/{raster[0]}/{county}_{raster[1]}_{suffix}.tif"
-        wbt.fill_missing_data(
-            i=input_raster,
-            output=f"{dir}/{raster[0]}/{county}_FINAL_{raster[1]}.tif",
-            filter=50,
-            weight=3.0,
-            no_edges=True
-        )
-
+        process = subprocess.run(fill_gaps)
         print(f"Gaps in {raster[0]} filled.")

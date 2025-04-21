@@ -23,14 +23,8 @@ python = ">=3.11,<4"
 requests = "^2.32.3"
 wget = "^3.2"
 click = "^8.1.8"
-centerline = "^1.1.1"
-networkx = "^3.4.2"
-shapely = "^2.0.7"
-numpy = "^2.2.3"
-laspy = "^2.5.3"
-lazrs = "^0.5.3"
-pyproj = "^3.6.1"
-whitebox = "^2.3.1"
+
+
 
 [build-system]
 requires = ["poetry-core"]

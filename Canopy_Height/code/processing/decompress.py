@@ -1,6 +1,6 @@
 '''
 Decompresses LAZ files into LAS files by county, iterating through a list of counties.
-Used for Tennessee, Kentucky, and Virginia counties.
+For WV counties, additionally reprojects all LAS files to EPSG:6350 for consistency.
 '''
 
 import os
@@ -8,63 +8,35 @@ import laspy
 from multiprocessing import Pool
 import pandas as pd
 import time
-from functools import partial
+import pyproj
+from pyproj import CRS, Proj, transform
 
-from mtm_utils.variables import (
-    LIDAR_DIR,
-    TILE_IDS_DIR,
+from Canopy_Height.code.ch_variables import (
     TN_COUNTIES,
     KY_COUNTIES,
-    VA_COUNTIES
+    VA_COUNTIES,
+    WV_COUNTIES,
+    MAIN_DIR,
+    TILE_IDS_DIR,
+    CPU_CORES,
 )
 
-def decompress(fn, state_dir, county, tile_IDs, county_las_dir):
-    for ID in tile_IDs:
-        if fn.endswith(f'_{ID}.laz'):
-            name = fn.replace('.laz', '.las')
-            path = f'{county_las_dir}{county}_{name}'
-            if not os.path.exists(path):
-                max_retries = 3
-                retry_count = 0
-                while retry_count < max_retries:
-                    try:
-                        # Read the LAZ file
-                        print(f"Reading {fn}...")
-                        laz = laspy.read(f'{state_dir}{fn}')
-                        las = laspy.convert(laz)
-                        
-                        # Write directly to gcsfuse mount
-                        print(f"Writing to {path}...")
-                        las.write(path)
-                        
-                        print(f"Successfully processed {fn}")
-                        break  # Success, exit retry loop
-                            
-                    except InterruptedError as e:
-                        retry_count += 1
-                        if retry_count == max_retries:
-                            print(f"Failed to process {fn} after {max_retries} attempts due to interrupted system call")
-                            print(f"Error details: {str(e)}")
-                        else:
-                            print(f"Retry {retry_count}/{max_retries} for {fn}")
-                            print(f"Waiting 5 seconds before retry...")
-                            time.sleep(5)  # Increased delay to 5 seconds
-                    except IOError as e:
-                        retry_count += 1
-                        if retry_count == max_retries:
-                            print(f"Failed to process {fn} after {max_retries} attempts: {str(e)}")
-                            print(f"Error details: {str(e)}")
-                        else:
-                            print(f"Retry {retry_count}/{max_retries} for {fn}")
-                            print(f"Waiting 5 seconds before retry...")
-                            time.sleep(5)  # Increased delay to 5 seconds
-                    except Exception as e:
-                        print(f"Unexpected error processing {fn}: {str(e)}")
-                        print(f"Error type: {type(e).__name__}")
-                        print(f"Error details: {str(e)}")
-                        break  # Don't retry for unexpected errors
+# Specify state and list counties to decompress
+state = 'tn'
+state_dir = f'{MAIN_DIR}/{state}'
 
-def process_county(county):
+if state == 'tn':
+    counties = TN_COUNTIES
+elif state == 'ky':
+    counties = KY_COUNTIES
+elif state == 'va':
+    counties = VA_COUNTIES
+elif state == 'wv':
+    counties = WV_COUNTIES
+
+# Decompress all the tiles in each county
+for county in counties:
+
     # Get list of tile IDs from county
     df = pd.read_csv(f'{TILE_IDS_DIR}/{county}.csv', header=0)
     tile_IDs = df.iloc[:, 0].tolist()
@@ -84,17 +56,53 @@ def process_county(county):
     print("Duplicates:")
     print(list(duplicates))
 
-    # Organize directories
-    county_las_dir = f'{state_dir}test_{county}/las/'
+    # Create directory to store decompressed las files for the county
+    county_las_dir = f'{state_dir}/{county}/las'
     os.makedirs(county_las_dir, exist_ok=True)
 
     # Iterate through the state laz bucket and decompress to las
     start_time = time.time()
 
-    # Process files
-    num_processes = 1
+    def decompress(fn):
+        for ID in tile_IDs:
+            if fn.endswith(f'_{ID}.laz'):
+                name = fn.replace('.laz', '.las')
+                path = f'{county_las_dir}/{county}_{name}'
+                if not os.path.exists(path):
+                    laz = laspy.read(f'{state_dir}/{fn}')
+                    las = laspy.convert(laz)
+                    
+                    if state == 'wv':
+                        # Define function to assign source CRS based on lidar project (for WV tiles only)
+                        def get_source_crs(fn):
+                            if "VA_NRCS_South_Central_B1" in fn:
+                                return pyproj.CRS("EPSG:6346")
+                            elif "VA_R3_Southwest_A" in fn:
+                                return pyproj.CRS("EPSG:6346")
+                            elif "WV_R3_East" in fn:
+                                return pyproj.CRS("EPSG:26917")
+                            else:
+                                return pyproj.CRS("EPSG:6350")
+
+                        # Define function to reproject LAS files (for WV tiles only)
+                        def reproject(las, source_crs):
+                            target_crs = pyproj.CRS('EPSG:6350')
+                            transformer = pyproj.Transformer.from_crs(source_crs, target_crs, always_xy=True)
+                            xyz = transformer.transform(las.x, las.y, las.z)
+                            las.x, las.y, las.z = xyz
+                            las.header.add_crs(target_crs)
+                        
+                        source_crs = get_source_crs(fn)
+                        if source_crs != pyproj.CRS("EPSG:6350"):
+                            reproject(las, source_crs)
+                    
+                    las.write(path)
+
+    # Parallelize over all CPU cores
+    num_processes = CPU_CORES
+    print(f"Decompressing tiles from {county} county...")
     with Pool(num_processes) as pool:
-        pool.map(partial(decompress, state_dir=state_dir, county=county, tile_IDs=tile_IDs, county_las_dir=county_las_dir), os.listdir(state_dir))
+        pool.map(decompress, os.listdir(state_dir))
 
     # Print results and elapsed time
     print(f'Successfully converted {len(os.listdir(county_las_dir))} LAS files for {county} county.')
@@ -103,11 +111,11 @@ def process_county(county):
     elapsed_time = (current_time - start_time) // 60
     print(f'Elapsed time: {elapsed_time} mins')
 
-    # Check to ensure list of tile IDs is identical to list of decompressed files,
-    # and print any exceptions
-    def extract_ID(county_las_dir):
+    # Check to ensure list of tile IDs is identical to list of decompressed files
+    # Print any exceptions
+    def extract_IDs(las_files):
         decompressed_IDs = []
-        for fn in os.listdir(county_las_dir):
+        for fn in las_files:
             last_underscore_index = fn.rfind("_")
             start_index = last_underscore_index + 1
             end_index = fn.rfind(".")
@@ -115,7 +123,7 @@ def process_county(county):
             decompressed_IDs.append(tile_ID)
         return set(decompressed_IDs)
 
-    decompressed_IDs = extract_ID(county_las_dir)
+    decompressed_IDs = extract_IDs(os.listdir(county_las_dir))
     tile_IDs = set(tile_IDs)
 
     unique_to_IDs = tile_IDs - decompressed_IDs
@@ -124,25 +132,7 @@ def process_county(county):
     print(f'Only in tile IDs: {unique_to_IDs}')
     print(f'Only in decompressed bucket: {unique_to_decompressed}')
 
-if __name__ == '__main__':
-    # Select state
-    state = 'tn'
-    if state == 'tn':
-        counties = TN_COUNTIES
-    elif state == 'ky':
-        counties = KY_COUNTIES
-    elif state == 'va':
-        counties = VA_COUNTIES
-
-    # Set up state directory
-    state_dir = f'{LIDAR_DIR}/{state}/'
-    start_time = time.time()
-
-    # Iterate over each county in list
-    for county in counties:
-        process_county(county)
-
-    print('All counties complete.')
-    current_time = time.time()
-    elapsed_time = (current_time - start_time) // 60
-    print(f'Total elapsed time: {elapsed_time} mins')
+print('All counties complete.')
+current_time = time.time()
+elapsed_time = (current_time - start_time) // 60
+print(f'Total elapsed time: {elapsed_time} mins')
