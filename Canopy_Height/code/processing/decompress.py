@@ -1,6 +1,13 @@
 '''
 Decompresses LAZ files into LAS files by county, iterating through a list of counties.
 For WV counties, additionally reprojects all LAS files to EPSG:6350 for consistency.
+
+Inputs: 
+    - List of tile IDs for each county (e.g. gcs/lidar_data/tile_IDs/anderson.csv)
+    - Compressed LAZ files in the state directory (e.g. gcs/lidar_data/tn/TN_27_County_B1_2248661NE.laz)
+
+Outputs:
+    - Decompressed LAS files for each county in the corresponding county directory (e.g. gcs/lidar_data/tn/anderson/las/anderson_TN_27_County_B1_2430677NE.las)
 '''
 
 import os
@@ -21,7 +28,7 @@ from Canopy_Height.code.ch_variables import (
     CPU_CORES,
 )
 
-# Specify state and list counties to decompress
+# Specify state
 state = 'tn'
 state_dir = f'{MAIN_DIR}/{state}'
 

@@ -1,5 +1,11 @@
 '''
 Converts a raster into a Cloud Optimized GeoTIFF so that it can be imported as an Earth Engine asset.
+
+Inputs:
+    - Region-wide CHM, DTM, or DSM (e.g. gcs/lidar_data/final_mosaics/complete_chm_gap_filled_3857.tif)
+
+Outputs:
+    - Region-wide CHM, DTM, or DSM in COG format (e.g. gcs/lidar_data/final_mosaics/complete_chm_gap_filled_3857_cog.tif)
 '''
 
 from osgeo import gdal

@@ -1,6 +1,16 @@
 '''
 Produces a mosaicked CHM, DTM, and DSM for each county from the county's set of LAS files,
 iterating through a list of counties. Reprojects all rasters to EPSG:3857.
+
+Inputs:
+    - LAS files for each county (e.g. gcs/lidar_data/tn/anderson/las/anderson_TN_27_County_B1_2430677NE.las)
+
+Saved intermediates:
+    - CHM, DTM, and DSM mosaics for each county (e.g. gcs/lidar_data/tn/anderson/chm/anderson_chm.tif)
+
+Outputs:
+    - CHM, DTM, and DSM mosaics for each county reprojected to EPSG:3857 (e.g. gcs/lidar_data/tn/anderson/chm/anderson_chm_3857.tif),
+      and converted to meters for Kentucky and Tennessee (e.g. gcs/lidar_data/tn/anderson/chm/anderson_chm_meters.tif)
 '''
 
 import os

@@ -1,6 +1,19 @@
 '''
 Fills holes from missing tiles in a county's rasters by re-processing those tiles and mosaicking them into the original raster.
 Additionally interpolates any remaining small gaps. Requires manually identifying and listing the missing tiles using a tile index.
+
+Inputs:
+    - List of missing tiles for a county (edit in ch_variables.py)
+    - LAZ files, to reprocess
+
+Saved intermediates:
+    - Missing tiles processed into CHM/DTM/DSMs and mosaicked together (e.g. gcs/lidar_data/wv/putnam/chm/putnam_holes_chm.tif)
+    - Missing tile mosaics reprojected to EPSG:3857 (e.g. gcs/lidar_data/wv/putnam/chm/putnam_holes_chm_3857.tif)
+    - Missing tile mosaics converted to meters for Kentucky and Tennessee (e.g. gcs/lidar_data/wv/putnam/chm/putnam_holes_chm_meters.tif)
+    - County-wide CHM, DTM, and DSM mosaics with missing tiles patched (e.g. gcs/lidar_data/wv/putnam/chm/putnam_patched_chm.tif)
+
+Outputs:
+    - CHM, DTM, and DSM mosaics for the county with missing tiles patched and gaps filled (e.g. gcs/lidar_data/wv/putnam/chm/putnam_FINAL_chm.tif)
 '''
 
 import os

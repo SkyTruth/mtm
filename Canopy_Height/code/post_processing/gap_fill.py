@@ -1,5 +1,11 @@
 '''
 Interpolates small gaps in rasters, typically from water features.
+
+Inputs:
+    - CHM, DTM, and DSM mosaics for a county (e.g. gcs/lidar_data/tn/anderson/chm/anderson_chm_meters.tif)
+
+Outputs:
+    - CHM, DTM, and DSM mosaics for the county with gaps filled (e.g. gcs/lidar_data/tn/anderson/chm/anderson_FINAL_chm.tif)
 '''
 
 import os
