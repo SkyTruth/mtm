@@ -3,11 +3,56 @@ This project creates a wall-to-wall 10m canopy height model (CHM) for 73 countie
 
 [Read the full report here.](https://docs.google.com/document/d/1bMBGrUBo6LNwxNrPXTVW6mD1SCKbbWqQ_B9PEYEKGdk/edit?usp=sharing)
 
-## Note
+## Computational Environment
 Due to the large data volume and processing requirements for creating a CHM across 73 counties, this code was developed and tested in specialized computational environments (detailed below) separate from the poetry-managed environment used for the rest of the MTM repository.
 
+## GCS Bucket Directory Structure
+This repository was designed to read and write files to a Google Cloud Storage (GCS) bucket. The following directory structure should be maintained in the GCS bucket for proper data organization and processing:
+
+```
+Bucket name: mountaintop_mining
+
+lidar_data/
+├── tile_IDs/                   # Lists of tile IDs for each lidar project and county
+├── final_mosaics/              # Mosaicked region-wide CHMs, DSMs, and DTMs
+├── ky/                         # All compressed LAZ files for Kentucky
+│   ├── bell/
+│   │   ├── las/                # Decompressed LAS files for Bell County
+│   │   ├── chm/                # Mosaicked county-wide CHMs for Bell County
+│   │   ├── dsm/                # Mosaicked county-wide DSMs for Bell County
+│   │   └── dtm/                # Mosaicked county-wide DTMs for Bell County
+│   ├── boyd/
+│   │   ├── las/
+│   │   ├── chm/
+│   │   ├── dsm/
+│   │   └── dtm/
+│   └── ... (other counties)    # Directories for each county in Kentucky
+├── tn/                         # All compressed LAZ files for Tennessee
+│   ├── anderson/
+│   │   ├── las/
+│   │   ├── chm/
+│   │   ├── dsm/
+│   │   └── dtm/
+│   └── ... (other counties)    # Directories for each county in Tennessee
+├── va/                         # All compressed LAZ files for Virginia
+│   ├── buchanan/
+│   │   ├── las/
+│   │   ├── chm/
+│   │   ├── dsm/
+│   │   └── dtm/
+│   └── ... (other counties)    # Directories for each county in Virginia
+└── wv/                         # All compressed LAZ files for West Virginia
+    ├── boone/
+    │   ├── las/
+    │   ├── chm/
+    │   ├── dsm/
+    │   └── dtm/
+    └── ... (other counties)    # Directories for each county in West Virginia
+```
+The only prerequisite data files are the lists of tile IDs in the /tile_IDs/ directory, which can be found in this repo under Canopy_Height/data/. All other files are produced using the scripts in this repo. Each state directory will contain all the compressed LAZ files for that state, as well as subdirectories for each county. Within each county directory, there are separate folders for decompressed LAS files and the processed county-wide rasters (CHM, DSM, and DTM). The /final_mosaics/ directory contains the completed, region-wide rasters.
+
 ## Scraping LAZ Files
-The scraper scripts are Jupyter notebooks that are intended to be run in Google Colab for compatibility with GCS. The tile ID files used in these scripts can be found in Canopy_Height/data/. Each tile ID file consists of a list of the subset of tile IDs in a lidar acquisition project that intersect the study region.
+The scraper scripts are Jupyter notebooks that are intended to be run in Google Colab for compatibility with GCS. The tile ID files used in these scripts can be found in Canopy_Height/data/. Each tile ID file consists of a list of the subset of tile IDs in a lidar acquisition project that intersect the study region. The LAZ tiles are then scraped into the corresponding state directories of the GCS bucket.
 
 1. scraper.ipynb --> Uses a list of tile IDs to scrape the corresponding LAZ files from the USGS database into a GCS bucket. Used for Tennessee, West Virginia, and Virginia lidar acquisition projects.
 2. scraper_ky.ipynb --> Uses a list of tile IDs to scrape the corresponding LAZ files from Kentucky’s LiDAR database into a GCS bucket.
@@ -35,7 +80,7 @@ source env/bin/activate
 pip install -r req.txt
 ```
 
-### Setting up gcsfuse and mounting GCS bucket
+### Setting Up gcsfuse and Mounting GCS Bucket
 Gcsfuse is used to mount a GCS bucket to the VM directory, allowing the user to work directly with files in the bucket as if they exist locally in the directory.
 
 1. Download gcsfuse v2.0.0 [here.](https://github.com/GoogleCloudPlatform/gcsfuse/releases/tag/v2.0.0)
@@ -51,12 +96,11 @@ python3 Canopy_Height/code/mount.py
 ```
 
 ### Setting up WhiteboxTools
-WhiteboxTools is a set of open-source geospatial tools (including LiDAR tools) that can be integrated directly into Python scripts.
-[Follow these instructions to build WhiteboxTools from source code.](https://www.whiteboxgeo.com/manual/wbt_book/install.html#building-whiteboxtools-from-source-code)
+WhiteboxTools is a set of open-source geospatial tools (including LiDAR tools) that can be integrated directly into Python scripts. [Follow these instructions to build WhiteboxTools from source code.](https://www.whiteboxgeo.com/manual/wbt_book/install.html#building-whiteboxtools-from-source-code)
 
 
-### Scripts in order of use
-To avoid memory limitations, tiles must be processed from one county at a time. Lists of tile IDs for each county can be found in Canopy_Height/data/.
+### Scripts in Order of Use
+To avoid memory limitations, data must be processed one county at a time. Lists of tile IDs for each county can be found in Canopy_Height/data/.
 
 1. decompress.py --> Decompresses LAZ files into LAS files by county.
 ```shell
@@ -78,14 +122,16 @@ python3 Canopy_Height/code/post_processing/hole_patch.py
 python3 Canopy_Height/code/post_processing/gap_fill.py
 ```
 
-At this stage, clip each county raster to its border to eliminate overlapping data between counties and mosaic them into region-wide rasters in QGIS, then re-upload to the FINAL_MOSACS_DIR in GCS. gap_fill.py may be used again to interpolate any single-pixel gaps between counties resulting from raster misalignment.
+At this stage, clip each county raster to its border to eliminate overlapping data between counties and mosaic them into region-wide rasters in QGIS, then re-upload to /final_mosaics/ in the GCS bucket. gap_fill.py may be used again to interpolate any single-pixel gaps between counties resulting from raster misalignment.
 
 5. cog_converter.py --> Converts a raster into a Cloud Optimized GeoTIFF so that it can be imported as an Earth Engine asset.
 ```shell
 python3 Canopy_Height/code/post_processing/cog_converter.py
 ```
 
-The CHM does not perform well on water features and does not differentiate between vegetation and built structures, so the final product is optionally masked with a water / urban mask layer from the US Census Bureau. This mask is an unbuffered version of the mask used for the MTM detection model.
+The CHM does not perform well on water features and does not differentiate between vegetation and built structures, so the final product is optionally masked in Earth Engine with a water / urban mask layer from the US Census Bureau. This mask is an unbuffered version of the mask used for the MTM detection model.
+
+The following script is used only for metadata analysis:
 
 6. point_density.py --> Takes a random sample of 50 LAZ tiles from a LiDAR project and calculates the average point density.
 ```shell
