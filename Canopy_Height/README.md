@@ -24,32 +24,31 @@ The remainder of the code was developed and tested in the following virtual mach
 - **vCPUs:** 16
 - **RAM:** 128 GB
 - **Disk Space:** 50 GB
-- **Compute Zone:** us-central1-a
 - **Python Version:** 3.11
 
 ### Virtual Environment
 All required packages and their versions (with the exception of gcsfuse and whitebox) are contained in req.txt and installed in a virtual environment.
-'''shell
+```shell
 sudo apt install python3.11-venv
 python3 -m venv env
 source env/bin/activate
 pip install -r req.txt
-'''
+```
 
 ### Setting up gcsfuse and mounting GCS bucket
 Gcsfuse is used to mount a GCS bucket to the VM directory, allowing the user to work directly with files in the bucket as if they exist locally in the directory.
 
 1. Download gcsfuse v2.0.0 [here.](https://github.com/GoogleCloudPlatform/gcsfuse/releases/tag/v2.0.0)
 2. Install fuse and the gcsfuse package to the VM.
-'''shell
+```shell
 sudo apt-get update
 sudo apt-get install fuse
 sudo dpkg -i gcsfuse_2.0.0_amd64.deb
-'''
+```
 3. Use mount.py to mount the GCS bucket as a directory in the VM.
-'''shell
+```shell
 python3 Canopy_Height/code/mount.py
-'''
+```
 
 ### Setting up WhiteboxTools
 WhiteboxTools is a set of open-source geospatial tools (including LiDAR tools) that can be integrated directly into Python scripts.
@@ -60,35 +59,35 @@ WhiteboxTools is a set of open-source geospatial tools (including LiDAR tools) t
 To avoid memory limitations, tiles must be processed from one county at a time. Lists of tile IDs for each county can be found in Canopy_Height/data/.
 
 1. decompress.py --> Decompresses LAZ files into LAS files by county.
-'''shell
+```shell
 python3 Canopy_Height/code/processing/decompress.py
-'''
+```
 2. process_chm.py --> Produces a mosaicked CHM, DTM, and DSM for each county from the county’s set of LAS files.
-'''shell
+```shell
 python3 Canopy_Height/code/processing/process_chm.py
-'''
+```
 
 Manually inspect the output rasters for each county for gaps and missing tiles. Use hole_patch.py and gap_fill.py as needed for post-processing.
 
 3. hole_patch.py --> Fills holes from missing tiles in a county's rasters by re-processing those tiles and mosaicking them into the original raster. Additionally interpolates any remaining small gaps. Requires manually inspecting a raster and listing the missing tiles.
-'''shell
+```shell
 python3 Canopy_Height/code/post_processing/hole_patch.py
-'''
+```
 4. gap_fill.py --> Interpolates small gaps in rasters, typically from water features.
-'''shell
+```shell
 python3 Canopy_Height/code/post_processing/gap_fill.py
-'''
+```
 
 At this stage, clip each county raster to its border to eliminate overlapping data between counties and mosaic them into region-wide rasters in QGIS, then re-upload to the FINAL_MOSACS_DIR in GCS. gap_fill.py may be used again to interpolate any single-pixel gaps between counties resulting from raster misalignment.
 
 5. cog_converter.py --> Converts a raster into a Cloud Optimized GeoTIFF so that it can be imported as an Earth Engine asset.
-'''shell
+```shell
 python3 Canopy_Height/code/post_processing/cog_converter.py
-'''
+```
 
 The CHM does not perform well on water features and does not differentiate between vegetation and built structures, so the final product is optionally masked with a water / urban mask layer from the US Census Bureau. This mask is an unbuffered version of the mask used for the MTM detection model.
 
 6. point_density.py --> Takes a random sample of 50 LAZ tiles from a LiDAR project and calculates the average point density.
-'''shell
+```shell
 python3 Canopy_Height/code/post_processing/point_density.py
-'''
+```
