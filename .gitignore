@@ -7,7 +7,6 @@ data/USCB_Data/
 data/tmp/
 config.py
 ToDo.txt
-Highwall_Detection/code/inputs/*
 Highwall_Detection/code/temps/*
 Highwall_Detection/code/outputs/*
 .DS_Store
