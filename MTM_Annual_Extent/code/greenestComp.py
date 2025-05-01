@@ -4,7 +4,7 @@ import time
 from ee import batch
 from google.cloud import storage
 
-from config import EE_SERVICE_ACCOUNT, EE_CREDENTIAL_DIR, EE_CREDENTIALS
+from config import EE_SERVICE_ACCOUNT, EE_CREDENTIALS
 from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_EE_GPC_DIR
 
 
@@ -16,9 +16,7 @@ bucket_name = GCLOUD_BUCKET
 storage_bucket = storage_client.bucket(bucket_name)
 print(f"STORAGE BUCKET:{storage_bucket}\n\n")
 
-credentials = ee.ServiceAccountCredentials(
-    EE_SERVICE_ACCOUNT, EE_CREDENTIALS
-)
+credentials = ee.ServiceAccountCredentials(EE_SERVICE_ACCOUNT, EE_CREDENTIALS)
 ee.Initialize(credentials)
 ########################################################################################################################
 ########################################################################################################################

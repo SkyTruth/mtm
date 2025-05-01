@@ -5,10 +5,15 @@ from ee import batch
 from google.cloud import storage
 
 from config import EE_SERVICE_ACCOUNT, EE_CREDENTIALS
-from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_EE_GPC_DIR, GCLOUD_MASK_DIR, GCLOUD_EE_THRESHOLD_DIR
+from mtm_utils.variables import (
+    GCLOUD_BUCKET,
+    GCLOUD_EE_GPC_DIR,
+    GCLOUD_MASK_DIR,
+    GCLOUD_EE_THRESHOLD_DIR,
+)
 
 
-processing_year = (datetime.date.today().year)
+processing_year = datetime.date.today().year
 # processing_year = 2023
 
 # The ID of your GCS bucket
@@ -38,20 +43,20 @@ img_url_list = []
 img_date_list = []
 
 for i in img_name_list:
-    img_url = "gs://"+bucket_name+"/"+i
+    img_url = "gs://" + bucket_name + "/" + i
     img_url_list.append(img_url)
 
 greenestPixelCompositeList = []
 
-for i in range(1984, processing_year+1):
+for i in range(1984, processing_year + 1):
     year = i
     annual_urls = []
 
     for url in img_url_list:
-      url_year = url.split("composite_")[1].split("0000000000-")[0]
-      if str(year) in url_year:
-        img_url = url
-        annual_urls.append(img_url)
+        url_year = url.split("composite_")[1].split("0000000000-")[0]
+        if str(year) in url_year:
+            img_url = url
+            annual_urls.append(img_url)
 
     print(f"{i}: {annual_urls}")
     # print(annual_urls)
@@ -71,50 +76,155 @@ for i in range(1984, processing_year+1):
 ########################################################################################################################
 
 greenestComposites = ee.ImageCollection.fromImages(greenestPixelCompositeList)
-studyArea = ee.FeatureCollection('users/skytruth-data/Plos_MTM_Fusion_Table_Backup/plosScriptFusionTableBackup/studyArea')
-studyAreaGeom = studyArea.geometry().getInfo()['coordinates']
+studyArea = ee.FeatureCollection(
+    "users/skytruth-data/Plos_MTM_Fusion_Table_Backup/plosScriptFusionTableBackup/studyArea"
+)
+studyAreaGeom = studyArea.geometry().getInfo()["coordinates"]
 exportBounds = ee.Geometry.Polygon(studyAreaGeom)
 
-fips_codes = [21013, 21019, 21025, 21043, 21051, 21053, 21063, 21065, 21071, 21089, 21095,
-              21109, 21115, 21119, 21121, 21125, 21127, 21129, 21131, 21133, 21135, 21147,
-              21153, 21159, 21165, 21175, 21189, 21193, 21195, 21197, 21199, 21203, 21205,
-              21231, 21235, 21237, 47001, 47013, 47025, 47035, 47049, 47129, 47133, 47137,
-              47141, 47145, 47151, 51027, 51051, 51105, 51167, 51169, 51185, 51195, 51720,
-              54005, 54011, 54015, 54019, 54025, 54039, 54043, 54045, 54047, 54053, 54055,
-              54059, 54067, 54075, 54079, 54081, 54089, 54099, 54101, 54109]
+fips_codes = [
+    21013,
+    21019,
+    21025,
+    21043,
+    21051,
+    21053,
+    21063,
+    21065,
+    21071,
+    21089,
+    21095,
+    21109,
+    21115,
+    21119,
+    21121,
+    21125,
+    21127,
+    21129,
+    21131,
+    21133,
+    21135,
+    21147,
+    21153,
+    21159,
+    21165,
+    21175,
+    21189,
+    21193,
+    21195,
+    21197,
+    21199,
+    21203,
+    21205,
+    21231,
+    21235,
+    21237,
+    47001,
+    47013,
+    47025,
+    47035,
+    47049,
+    47129,
+    47133,
+    47137,
+    47141,
+    47145,
+    47151,
+    51027,
+    51051,
+    51105,
+    51167,
+    51169,
+    51185,
+    51195,
+    51720,
+    54005,
+    54011,
+    54015,
+    54019,
+    54025,
+    54039,
+    54043,
+    54045,
+    54047,
+    54053,
+    54055,
+    54059,
+    54067,
+    54075,
+    54079,
+    54081,
+    54089,
+    54099,
+    54101,
+    54109,
+]
 
-allCounties = ee.FeatureCollection('users/skytruth-data/Plos_MTM_Fusion_Table_Backup/plosScriptFusionTableBackup/allCounties');
-features = allCounties.filter(ee.Filter.inList('FIPS', fips_codes))
+allCounties = ee.FeatureCollection(
+    "users/skytruth-data/Plos_MTM_Fusion_Table_Backup/plosScriptFusionTableBackup/allCounties"
+)
+features = allCounties.filter(ee.Filter.inList("FIPS", fips_codes))
 
-mask_url = "gs://"+bucket_name+"/"+GCLOUD_MASK_DIR+str(processing_year)+"_Input-Mask_4326.tiff"
+mask_url = (
+    "gs://"
+    + bucket_name
+    + "/"
+    + GCLOUD_MASK_DIR
+    + str(processing_year)
+    + "_Input-Mask_4326.tiff"
+)
 mask_input_60m = ee.Image.loadGeoTIFF(mask_url).unmask()
 
-miningPermits = ee.Image('users/andrewpericak/allMinePermits')
-miningPermits_noBuffer = ee.Image('users/andrewpericak/allMinePermits_noBuffer')
+miningPermits = ee.Image("users/andrewpericak/allMinePermits")
+miningPermits_noBuffer = ee.Image("users/andrewpericak/allMinePermits_noBuffer")
 
 mask_input_excludeMines = mask_input_60m.where(miningPermits_noBuffer.eq(1), 0)
 
 
 def reduce_region(feature):
-    final = yearImage.reduceRegion(reducer=ee.Reducer.intervalMean(0, 3), geometry=feature.geometry(), scale=30,
-                                   maxPixels=1e10).toImage().toFloat().clip(feature)
-    return(final)
+    final = (
+        yearImage.reduceRegion(
+            reducer=ee.Reducer.intervalMean(0, 3),
+            geometry=feature.geometry(),
+            scale=30,
+            maxPixels=1e10,
+        )
+        .toImage()
+        .toFloat()
+        .clip(feature)
+    )
+    return final
 
 
-for i in range(1984, processing_year+1):
+for i in range(1984, processing_year + 1):
     year = i
-    export_desc = "threshold_0-3_"+str(year)
+    export_desc = "threshold_0-3_" + str(year)
 
-    yearImage = ee.Image(greenestComposites.filterMetadata('year', 'equals', year).first()).select('NDVI').updateMask(miningPermits_noBuffer.unmask().Not()).updateMask(mask_input_60m.Not())
-    exportArea = ee.Geometry.Polygon([[[-85.80934903683277, 35.64442402256219], [-79.61790603657893, 35.64442402256219],
-                                       [-79.61790603657893, 39.02981799180214], [-85.80934903683277, 39.02981799180214],
-                                       [-85.80934903683277, 35.64442402256219]]])
+    yearImage = (
+        ee.Image(greenestComposites.filterMetadata("year", "equals", year).first())
+        .select("NDVI")
+        .updateMask(miningPermits_noBuffer.unmask().Not())
+        .updateMask(mask_input_60m.Not())
+    )
+    exportArea = ee.Geometry.Polygon(
+        [
+            [
+                [-85.80934903683277, 35.64442402256219],
+                [-79.61790603657893, 35.64442402256219],
+                [-79.61790603657893, 39.02981799180214],
+                [-85.80934903683277, 39.02981799180214],
+                [-85.80934903683277, 35.64442402256219],
+            ]
+        ]
+    )
 
     outfile_test_name = GCLOUD_EE_THRESHOLD_DIR + export_desc + ".tif"
     out_blob_test = storage_bucket.blob(outfile_test_name)
 
     if out_blob_test.exists():
-        print(f"  > {GCLOUD_EE_THRESHOLD_DIR + export_desc}.tif ALREADY EXISTS. PASSING.")
+        print(
+            f"  > {GCLOUD_EE_THRESHOLD_DIR + export_desc}.tif ALREADY EXISTS. PASSING."
+        )
         pass
     else:
         reduceAll = ee.ImageCollection(features.map(reduce_region)).mosaic()
@@ -124,16 +234,18 @@ for i in range(1984, processing_year+1):
             description=export_desc,
             bucket=GCLOUD_BUCKET,
             fileNamePrefix=GCLOUD_EE_THRESHOLD_DIR + export_desc,
-            region=exportArea.getInfo()['coordinates'],
+            region=exportArea.getInfo()["coordinates"],
             scale=30,
             crs="EPSG:4326",
             maxPixels=1e13,
-            fileFormat="GeoTIFF"
+            fileFormat="GeoTIFF",
         )
         print(f"writing to {GCLOUD_EE_THRESHOLD_DIR + export_desc}")
         export.start()
         while export.active():
-            print(f"     > Logging task for {year}  (id: {export.id}). Checks every 5 min.")
+            print(
+                f"     > Logging task for {year}  (id: {export.id}). Checks every 5 min."
+            )
             time.sleep(300)
         print(f"    > Outfile Status: {ee.data.getTaskStatus(export.id)}")
         print(f"        > {year} threshold image written")
