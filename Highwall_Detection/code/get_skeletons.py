@@ -29,13 +29,14 @@ if os.path.isdir(outputs) != True:
 #  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Define paths to input highwall polygons and final output centerlines
-input_shp = inputs+"unreclaimed_uncleaned.shp"
-output_shp = outputs+"unreclaimed_skeletons.shp"
+input_shp = inputs+"highwalls_1m.shp"
+output_shp = outputs+"highwall_skeletons.shp"
 
 # Variables
+min_area = 100
 interp_distance = 2
 min_spur_length = 10
-min_branch_length = 10
+min_branch_length = 20
 
 def clean_highwalls(gdf):
     """
@@ -44,7 +45,7 @@ def clean_highwalls(gdf):
     # Reproject to EPSG:32617
     repro_gdf = gdf.to_crs(epsg=32617)
 
-    def remove_holes(geom, min_area=100):
+    def remove_holes(geom, min_area=min_area):
         if isinstance(geom, Polygon):
             if geom.interiors:
                 new_interiors = [
@@ -95,17 +96,16 @@ def get_centerlines(row):
         print(f"Warning: Could not process polygon with ID {row['ID']}: {str(e)}")
         return None
 
-def longest_path_tree(graph):
+def find_longest_spine(graph):
     """
-    Finds the longest path in a weighted tree graph and returns a subgraph containing only the longest path.
-
-    Parameters:
-        graph (networkx.Graph): A connected graph (assumed to be a tree).
-
+    Finds the longest continuous path from a graph and returns the spine as a subgraph.
     Returns:
-        networkx.Graph: A subgraph of the input graph containing only the longest path.
+        networkx.Graph: Subgraph containing the longest spine, or None if no valid spine is found
     """
-
+    # If graph is empty or has no edges, return None
+    if len(graph.edges) == 0:
+        return None
+    
     def farthest_node(graph, start_node):
         """
         Helper function to find the farthest node and its distance from a given start node.
@@ -133,55 +133,39 @@ def longest_path_tree(graph):
         farthest = max(distances, key=distances.get)
         # Return the farthest node and its distance from the start node
         return farthest, distances[farthest]
-
-    # Step 1: Find one endpoint of the longest path
-    start_node = list(graph.nodes)[0] # Pick a start node
-    farthest, _ = farthest_node(graph, start_node) # Find the farthest node from the start node
-
-    # Step 2: Find the other endpoint of the longest path
-    other_farthest, _ = farthest_node(graph, farthest)
-
-    # Step 3: Extract the path from farthest to other_farthest
-    path_nodes = nx.shortest_path(
-        graph, source=farthest, target=other_farthest, weight="weight"
-    )
-
-    # Create a new graph for the longest path
-    longest_path_graph = nx.Graph()
-    for i in range(len(path_nodes) - 1):
-        u, v = path_nodes[i], path_nodes[i + 1]
-        # Add edge to the new graph with its weight
-        edge_data = graph.get_edge_data(u, v)
-        longest_path_graph.add_edge(u, v, **edge_data)
-
-    return longest_path_graph
-
-
-def find_longest_spine(graph):
-    """
-    Finds the longest continuous line from a graph and returns the spine as a subgraph
-    Returns:
-        networkx.Graph: Subgraph containing the longest spine, or None if no valid spine is found
-    """
-    # If graph is empty or has no edges, return None
-    if len(graph.edges) == 0:
-        return None
     
     try:
-        # Get the longest spine
-        spine_graph = longest_path_tree(graph)
-        
+        # Step 1: Find one endpoint of the longest path
+        start_node = list(graph.nodes)[0] # Pick a start node
+        farthest, _ = farthest_node(graph, start_node) # Find the farthest node from the start node
+
+        # Step 2: Find the other endpoint of the longest path
+        other_farthest, _ = farthest_node(graph, farthest)
+
+        # Step 3: Extract the path from farthest to other_farthest
+        path_nodes = nx.shortest_path(
+            graph, source=farthest, target=other_farthest, weight="weight"
+        )
+
+        # Create a new graph for the longest path
+        longest_path_graph = nx.Graph()
+        for i in range(len(path_nodes) - 1):
+            u, v = path_nodes[i], path_nodes[i + 1]
+            # Add edge to the new graph with its weight
+            edge_data = graph.get_edge_data(u, v)
+            longest_path_graph.add_edge(u, v, **edge_data)
+
         # If spine has no edges, return None
-        if len(spine_graph.edges) == 0:
+        if len(longest_path_graph.edges) == 0:
             return None
         
-        return spine_graph
+        return longest_path_graph
     
     except Exception as e:
         print(f"Error in find_longest_spine: {str(e)}")
         return None
 
-def extract_all_spines(cl, min_length=20):
+def extract_all_spines(cl, min_length=min_branch_length):
     """
     Iteratively extracts all spines above minimum length from a centerline
     """
@@ -230,8 +214,6 @@ def extract_all_spines(cl, min_length=20):
                 path.append(next_point)
                 current = next_point
     
-    print(f"Found {len(edges_to_remove)/2} edges to remove")
-    
     # Remove short spurs and isolated nodes
     graph.remove_edges_from(edges_to_remove)
     graph.remove_nodes_from([n for n in graph.nodes() if graph.degree(n) == 0])
@@ -266,8 +248,6 @@ def extract_all_spines(cl, min_length=20):
         spine_length = sum(data['weight'] for _, _, data in spine_graph.edges(data=True))
         if spine_length < min_length:
             break
-            
-        #print(f"Iteration {iteration}: Found spine of length {spine_length}")
         
         # Add spine edges to all_spines graph
         all_spines.add_edges_from(spine_graph.edges(data=True))
@@ -276,29 +256,18 @@ def extract_all_spines(cl, min_length=20):
         graph.remove_edges_from(spine_graph.edges())
         graph.remove_nodes_from([n for n in graph.nodes() if graph.degree(n) == 0])
         
-        #print(f"Remaining graph has {len(graph.edges)} edges")
         iteration += 1
     
     print(f"Finished extracting spines: found spines with {len(all_spines.edges)} total edges.")
     
     return all_spines if len(all_spines.edges) > 0 else None
 
-def graph_to_linestring(graph):
-    """Convert a path graph to a LineString"""
-    if len(graph.edges) == 0:
-        return None
-        
-    # Get edges in order
-    edges = list(nx.dfs_edges(graph))
-    coords = [edges[0][0]]
-    coords.extend(edge[1] for edge in edges)
-    return LineString(coords)
 
 def split_at_junctions(graph):
     """
     Split a graph at junction nodes (degree > 2) into individual branches
     Returns a list of subgraphs, each representing a branch between endpoints
-    and junctions, with no intermediate junctions. Branches shorter than 10m are removed.
+    and junctions, with no intermediate junctions. Branches shorter than min_branch_length are removed.
     """
     # If no edges, return empty list
     if len(graph.edges) == 0:
@@ -347,7 +316,7 @@ def split_at_junctions(graph):
                             if remaining_graph.has_edge(u, v):
                                 remaining_graph.remove_edge(u, v)
                         
-                        # Only add branch if it's longer than 10m
+                        # Only add branch if it's longer than min_branch_length
                         if branch_length >= min_branch_length:
                             branches.append(branch)
             except nx.NetworkXNoPath:
@@ -380,13 +349,23 @@ def split_at_junctions(graph):
     
     return branches
 
+def graph_to_linestring(graph):
+    """Convert a path graph to a LineString"""
+    if len(graph.edges) == 0:
+        return None
+        
+    # Get edges in order
+    edges = list(nx.dfs_edges(graph))
+    coords = [edges[0][0]]
+    coords.extend(edge[1] for edge in edges)
+    return LineString(coords)
+
 def get_skeletons():
     """
     Takes a shapefile of highwall polygons and extracts skeletons and branches.
     """
     gdf = gpd.read_file(input_shp)
     cleaned_gdf = clean_highwalls(gdf)
-    print(cleaned_gdf.crs)
     ex_gdf = cleaned_gdf.explode(index_parts=False)
 
     features = []
