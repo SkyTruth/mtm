@@ -421,9 +421,21 @@ def get_skeletons():
 
     # Save all features
     if len(features) > 0:
+        # Create GeoDataFrame from features
         features_gdf = gpd.GeoDataFrame(features, geometry="geometry", crs=cleaned_gdf.crs)
-        features_gdf.to_file(output_shp)
-        print(f"Saved {len(features)} features")
+        
+        # Create a single polygon from all cleaned highwalls
+        highwall_union = ex_gdf.union_all()
+        
+        # Clip all skeletons to the highwall union
+        clipped_gdf = features_gdf.copy()
+        clipped_gdf['geometry'] = clipped_gdf.intersection(highwall_union)
+        
+        # Remove any empty or invalid geometries
+        clipped_gdf = clipped_gdf[clipped_gdf.geometry.length > 0]
+        
+        clipped_gdf.to_file(output_shp)
+        print(f"Saved {len(clipped_gdf)} features after clipping")
 
 
 if __name__ == "__main__":
