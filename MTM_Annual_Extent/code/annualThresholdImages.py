@@ -14,8 +14,8 @@ from mtm_utils.variables import (
 )
 
 
-processing_year = datetime.date.today().year
-# processing_year = 2023
+# processing_year = datetime.date.today().year
+processing_year = 2023
 
 # The ID of your GCS bucket
 storage_client = storage.Client()
@@ -59,8 +59,6 @@ for i in range(1984, processing_year + 1):
             img_url = url
             annual_urls.append(img_url)
 
-    print(f"{i}: {annual_urls}")
-    # print(annual_urls)
     image_1 = annual_urls[0]
     image_2 = annual_urls[1]
     # print(f"Year - {year}\n    > {image_1}\n    > {image_2}")
@@ -122,8 +120,9 @@ def reduce_region(feature):
 
 
 for i in range(1984, processing_year + 1):
+# for i in range(1998, 2001):
     year = i
-    export_desc = "threshold_0-3_" + str(year)
+    export_desc = "X_threshold_0-3_" + str(year)
 
     yearImage = (
         ee.Image(greenestComposites.filterMetadata("year", "equals", year).first())
@@ -169,8 +168,8 @@ for i in range(1984, processing_year + 1):
         export.start()
         while export.active():
             print(
-                f"     > Logging task for {year}  (id: {export.id}). Checks every 5 min."
+                f"     > Logging task for {year}  (id: {export.id}). Checks every 1 min."
             )
-            time.sleep(300)
+            time.sleep(60)
         print(f"    > Outfile Status: {ee.data.getTaskStatus(export.id)}")
         print(f"        > {year} threshold image written")
