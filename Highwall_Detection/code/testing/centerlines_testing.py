@@ -5,13 +5,13 @@ For testing and modifying just the get_centerlines function.
 import centerline.geometry as cl
 import geopandas as gpd
 import os
-
+from shapely.geometry import Polygon, MultiPolygon
 #  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  Working directories
 #  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Define directory root
-root = os.path.dirname(os.path.abspath(__file__))
+root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 
 # Set up input, temp, and output directories
 inputs = root+"/inputs/"
@@ -31,16 +31,50 @@ if os.path.isdir(outputs) != True:
 #  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Define paths to input highwall polygons and final output centerlines
-input_shp = inputs+"test_set.shp"
-output_shp = outputs+"test_centerlines.shp"
+input_shp = inputs+"unreclaimed_uncleaned.shp"
+output_shp = outputs+"test_centerlines_4_clipped.shp"
 
-interp_distance = 2
+interp_distance = 4
+
+
+def clean_highwalls(gdf):
+    """
+    Reprojects, removes small holes, and buffers highwall polygons to maintain 8-connectivity.
+    """
+    # Reproject to EPSG:32617
+    repro_gdf = gdf.to_crs(epsg=32617)
+
+    def remove_holes(geom, min_area=100):
+        if isinstance(geom, Polygon):
+            if geom.interiors:
+                new_interiors = [
+                    ring for ring in geom.interiors 
+                    if Polygon(ring).area >= min_area
+                ]
+                return Polygon(geom.exterior, new_interiors)
+            return geom
+        # Handle MultiPolygon case
+        elif isinstance(geom, MultiPolygon):
+            return MultiPolygon([remove_holes(poly, min_area) for poly in geom.geoms])
+        return geom
+
+    # Apply the hole removal function to each geometry
+    repro_gdf["geometry"] = repro_gdf["geometry"].apply(remove_holes)
+    
+    # Buffer to maintain 8-connectivity
+    repro_gdf["geometry"] = repro_gdf["geometry"].buffer(1.0)
+
+    repro_gdf.to_file(temps+"cleaned_highwalls.shp")
+    
+    return repro_gdf
+
 
 def get_centerlines():
     # Read in highwall polygons
+
     gdf = gpd.read_file(input_shp)
-    ex_gdf = gdf.explode(index_parts=False)
-    print(gdf.crs)
+    cleaned_gdf = clean_highwalls(gdf)
+    ex_gdf = cleaned_gdf.explode(index_parts=False)
 
     c_lines = []
     for _, row in ex_gdf.iterrows(): # Iterate through each highwall polygon

@@ -12,14 +12,13 @@ import geopandas as gpd
 import os
 import networkx as nx
 from shapely.geometry import LineString, Polygon, MultiPolygon
-import time
 
 #  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  Working directories
 #  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Define directory root
-root = os.path.dirname(os.path.abspath(__file__))
+root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 
 # Set up input, temp, and output directories
 inputs = root+"/inputs/"
@@ -40,12 +39,13 @@ if os.path.isdir(outputs) != True:
 
 # Define paths to input highwall polygons and final output centerlines
 input_shp = inputs+"unreclaimed_uncleaned.shp"
-output_shp = outputs+"unreclaimed_skeletons.shp"
+output_shp = outputs+"no_spine_extraction.shp"
 
 # Variables
-interp_distance = 2
+min_area = 100
+interp_distance = 4
 min_spur_length = 10
-min_branch_length = 10
+min_branch_length = 20
 
 def clean_highwalls(gdf):
     """
@@ -54,7 +54,7 @@ def clean_highwalls(gdf):
     # Reproject to EPSG:32617
     repro_gdf = gdf.to_crs(epsg=32617)
 
-    def remove_holes(geom, min_area=100):
+    def remove_holes(geom, min_area=min_area):
         if isinstance(geom, Polygon):
             if geom.interiors:
                 new_interiors = [
@@ -68,15 +68,15 @@ def clean_highwalls(gdf):
             return MultiPolygon([remove_holes(poly, min_area) for poly in geom.geoms])
         return geom
 
-    # Apply the hole removal function to each geometry
-    repro_gdf["geometry"] = repro_gdf["geometry"].apply(remove_holes)
-    
     # Buffer to maintain 8-connectivity
     repro_gdf["geometry"] = repro_gdf["geometry"].buffer(1.0)
-    
-    print(f'{len(repro_gdf)} highwalls cleaned.')
-    return repro_gdf
 
+    # Apply the hole removal function to each geometry
+    repro_gdf["geometry"] = repro_gdf["geometry"].apply(remove_holes)
+
+    repro_gdf.to_file(temps+"cleaned_highwalls.shp")
+    
+    return repro_gdf
 
 def get_centerlines(row):
     """
@@ -98,7 +98,7 @@ def get_centerlines(row):
                 c_line = cl.Centerline(poly,
                                     interpolation_distance=0.5,
                                     interpolation_options={'qhull_options': 'QJ Qbb QbB Qs'})
-        print(f'Centerline extracted for polygon {row["ID"]}')
+        
         return c_line
         
     except Exception as e:
@@ -164,24 +164,13 @@ def remove_short_spurs(graph, min_length):
     print(f'Short spurs removed.')
     return graph
 
-def graph_to_linestring(graph):
-    """Convert a path graph to a LineString"""
-    if len(graph.edges) == 0:
-        return None
-        
-    # Get edges in order
-    edges = list(nx.dfs_edges(graph))
-    coords = [edges[0][0]]
-    coords.extend(edge[1] for edge in edges)
-    
-    print(f'Graph converted to linestring.')
-    return LineString(coords)
-
 def split_at_junctions(graph):
     """
     Split a graph at junction nodes (degree > 2) into individual branches
-    using a simpler traversal approach.
+    Returns a list of subgraphs, each representing a branch between endpoints
+    and junctions, with no intermediate junctions. Branches shorter than min_branch_length are removed.
     """
+    # If no edges, return empty list
     if len(graph.edges) == 0:
         return []
         
@@ -195,48 +184,65 @@ def split_at_junctions(graph):
     # Get endpoints (degree 1)
     endpoints = [node for node, degree in graph.degree() if degree == 1]
     
-    # Start points for our traversal
-    start_points = endpoints + junctions
+    # Get all significant points (endpoints and junctions)
+    significant_points = endpoints + junctions
     
-    # Keep track of used edges
-    used_edges = set()
+    # Create a copy of the original graph to track unused edges
+    remaining_graph = graph.copy()
+    
+    # Find all direct paths between significant points and create subgraphs
     branches = []
-    
-    # Process each start point
-    for start in start_points:
-        # Get neighbors we haven't fully explored yet
-        neighbors = [n for n in graph.neighbors(start) 
-                    if (start, n) not in used_edges and (n, start) not in used_edges]
-        
-        for neighbor in neighbors:
-            # Create a new branch
-            branch = nx.Graph()
-            current = start
-            next_node = neighbor
-            
-            # Follow the path until we hit a junction or endpoint
-            while True:
-                # Add the current edge to the branch
-                edge_data = graph.get_edge_data(current, next_node)
-                branch.add_edge(current, next_node, **edge_data)
-                used_edges.add((current, next_node))
-                used_edges.add((next_node, current))
-                
-                # If we've hit a junction or endpoint, stop
-                if next_node in start_points:
-                    break
+    for i in range(len(significant_points)):
+        for j in range(i + 1, len(significant_points)):
+            start = significant_points[i]
+            end = significant_points[j]
+            try:
+                # Find all simple paths between the points
+                for path in nx.all_simple_paths(graph, start, end):
+                    # Check if path goes through any other junction points
+                    intermediate_junctions = [p for p in path[1:-1] if p in junctions]
                     
-                # Get the next node (the one we haven't visited)
-                current = next_node
-                next_neighbors = list(graph.neighbors(current))
-                next_node = [n for n in next_neighbors 
-                           if (current, n) not in used_edges and (n, current) not in used_edges]
-                
-                if not next_node:  # No unvisited neighbors
-                    break
-                next_node = next_node[0]
+                    # If the path is direct (no intermediate junctions)
+                    if not intermediate_junctions:
+                        # Create a new graph for this branch
+                        branch = nx.Graph()
+                        branch_length = 0
+                        # Add edges with their weights
+                        for k in range(len(path) - 1):
+                            u, v = path[k], path[k + 1]
+                            edge_data = graph.get_edge_data(u, v)
+                            branch.add_edge(u, v, **edge_data)
+                            branch_length += edge_data['weight']
+                            # Remove these edges from remaining_graph
+                            if remaining_graph.has_edge(u, v):
+                                remaining_graph.remove_edge(u, v)
+                        
+                        # Only add branch if it's longer than min_branch_length
+                        if branch_length >= min_branch_length:
+                            branches.append(branch)
+            except nx.NetworkXNoPath:
+                continue
+    
+    # Handle remaining edges (potential loops)
+    remaining_edges = list(remaining_graph.edges(data=True))
+    if remaining_edges:
+        # Create a new graph for each continuous chain of remaining edges
+        while remaining_edges:
+            branch = nx.Graph()
+            edge_stack = [remaining_edges[0]]  # Start with first remaining edge
             
-            # Only keep branches above minimum length
+            while edge_stack:
+                u, v, data = edge_stack.pop()
+                if not branch.has_edge(u, v):
+                    branch.add_edge(u, v, **data)
+                    remaining_edges.remove((u, v, data))
+                    
+                    # Find connected edges
+                    for edge in remaining_edges[:]:  # Use slice to allow removal
+                        if edge[0] in (u, v) or edge[1] in (u, v):
+                            edge_stack.append(edge)
+            
+            # Only add branch if it's longer than min_branch_length
             if len(branch.edges) > 0:
                 branch_length = sum(data['weight'] for _, _, data in branch.edges(data=True))
                 if branch_length >= min_branch_length:
@@ -244,34 +250,64 @@ def split_at_junctions(graph):
     
     return branches
 
+def graph_to_linestring(graph):
+    """Convert a path graph to a LineString"""
+    if len(graph.edges) == 0:
+        return None
+        
+    # Find endpoints (degree 1)
+    endpoints = [node for node, degree in graph.degree() if degree == 1]
+    
+    if endpoints:
+        # Start from an endpoint
+        start = endpoints[0]
+    else:
+        # If no endpoints, start from any node
+        start = list(graph.nodes())[0]
+    
+    # Use a simple path traversal
+    path = [start]
+    current = start
+    
+    while True:
+        neighbors = list(graph.neighbors(current))
+        if not neighbors:
+            break
+            
+        # Find the neighbor we haven't visited yet
+        next_node = None
+        for neighbor in neighbors:
+            if neighbor not in path:
+                next_node = neighbor
+                break
+                
+        if next_node is None:
+            break
+            
+        path.append(next_node)
+        current = next_node
+    
+    print('Graph converted to LineString.')
+    return LineString(path)
+
 def get_skeletons():
-    start_time = time.time()
     gdf = gpd.read_file(input_shp)
-    print(f"Read file: {time.time() - start_time:.2f}s")
     
     cleaned_gdf = clean_highwalls(gdf)
-    print(f"Cleaned highwalls: {time.time() - start_time:.2f}s")
     
     ex_gdf = cleaned_gdf.explode(index_parts=False)
-    print(f"Exploded: {time.time() - start_time:.2f}s")
 
     features = []
     
     for _, row in ex_gdf.iterrows():
-        iter_start = time.time()
         c_line = get_centerlines(row)
-        print(f"Got centerline for row {row['ID']}: {time.time() - iter_start:.2f}s")
         
         if c_line is not None:
             # Convert centerline to graph
-            graph_start = time.time()
             graph = build_graph_from_centerline(c_line)
-            print(f"Built graph for row {row['ID']}: {time.time() - graph_start:.2f}s")
             
             # Remove short spurs
-            spur_start = time.time()
             graph = remove_short_spurs(graph, min_length=min_spur_length)
-            print(f"Removed spurs for row {row['ID']}: {time.time() - spur_start:.2f}s")
             
             if len(graph.edges) > 0:
                 # Check if the graph has any junctions
@@ -279,9 +315,7 @@ def get_skeletons():
                 
                 if has_junctions:
                     # Split at junctions and process branches
-                    split_start = time.time()
                     branch_graphs = split_at_junctions(graph)
-                    print(f"Split at junctions for row {row['ID']}: {time.time() - split_start:.2f}s")
                     
                     for branch in branch_graphs:
                         branch_geom = graph_to_linestring(branch)
@@ -298,17 +332,12 @@ def get_skeletons():
                             "id": row["ID"],
                             "geometry": skeleton_geom
                         })
-        print(f"Total time for row {row['ID']}: {time.time() - iter_start:.2f}s")
-        print("----------------------------------------")
 
     # Save all features
-    save_start = time.time()
     if len(features) > 0:
         features_gdf = gpd.GeoDataFrame(features, geometry="geometry", crs=cleaned_gdf.crs)
         features_gdf.to_file(output_shp)
-        print(f"Saved {len(features)} features: {time.time() - save_start:.2f}s")
     
-    print(f"Total execution time: {time.time() - start_time:.2f}s")
 
 
 if __name__ == "__main__":
