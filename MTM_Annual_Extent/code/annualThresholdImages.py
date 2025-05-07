@@ -14,8 +14,8 @@ from mtm_utils.variables import (
 )
 
 
-# processing_year = datetime.date.today().year
-processing_year = 2023
+processing_year = datetime.date.today().year
+# processing_year = 2024
 
 # The ID of your GCS bucket
 storage_client = storage.Client()
@@ -52,7 +52,8 @@ greenestPixelCompositeList = []
 for i in range(1984, processing_year + 1):
     year = i
     annual_urls = []
-
+    
+    # Merging the split GPC images into single GEE Images
     for url in img_url_list:
         url_year = url.split("composite_")[1].split("0000000000-")[0]
         if str(year) in url_year:
@@ -61,7 +62,7 @@ for i in range(1984, processing_year + 1):
 
     image_1 = annual_urls[0]
     image_2 = annual_urls[1]
-    # print(f"Year - {year}\n    > {image_1}\n    > {image_2}")
+    # print(f"Year - {year}\n    > GPC pt1: {image_1}\n    > GPC pt1: {image_2}")
 
     ee_image_pt1 = ee.Image.loadGeoTIFF(image_1)
     ee_image_pt2 = ee.Image.loadGeoTIFF(image_2)
@@ -120,9 +121,8 @@ def reduce_region(feature):
 
 
 for i in range(1984, processing_year + 1):
-# for i in range(1998, 2001):
     year = i
-    export_desc = "X_threshold_0-3_" + str(year)
+    export_desc = "threshold_0-3_" + str(year)
 
     yearImage = (
         ee.Image(greenestComposites.filterMetadata("year", "equals", year).first())
