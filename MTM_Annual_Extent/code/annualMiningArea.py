@@ -113,7 +113,7 @@ for i in range(1984, finalCleaningYear):
     threshold_ee_image = ee.Image.loadGeoTIFF(threshold_image)
     threshold_ee_image = threshold_ee_image.set("year", year)
     thresholdCompositeList.append(threshold_ee_image)
-    # print(f"  > {year}\n        > GPCs: {gpc_image_1} & {gpc_image_2}\n        > THRESHOLD: {threshold_image}")
+    print(f"  > {year}\n        > GPCs: {gpc_image_1} & {gpc_image_2}\n        > THRESHOLD: {threshold_image}")
 
 ########################################################################################################################
 ########################################################################################################################
@@ -373,9 +373,8 @@ cumulative_image = ee.ImageCollection([])
 # Since issues have been encountered properly area-filtering the data in raster space, we now filter the data in vector
 # space. This area filtered vector is likewise used to clean the imagery.
 for i in range(initialCleaningYear + 2, processing_year + 1):
-    # for i in range(1998, 2000):
     year = i
-    annual_export_desc = str(year) + "_activeMining_reTEST"
+    annual_export_desc = str(year) + "_activeMining"
 
     # All File-Exists Tests are run on vector data.
     if i in range(initialCleaningYear + 2, processing_year):
@@ -469,7 +468,7 @@ for i in range(initialCleaningYear + 2, processing_year + 1):
             fileNamePrefix=outfile_raster_fin_name,
             region=studyArea.geometry(),
             scale=30,
-            crs="EPSG:5072",
+            crs="EPSG:4326",
             maxPixels=1e13,
             fileFormat="GeoTIFF",
         )
@@ -487,53 +486,21 @@ for i in range(initialCleaningYear + 2, processing_year + 1):
 """
 CUMULATIVE MINING - EXPORT
 """
-cumulativeArea = (
-    cumulative_image.filter(ee.Filter.gt("year", initialCleaningYear + 1)).filter(
-        ee.Filter.lt("year", processing_year)
-    )
-).select("year")
-cumulativeArea_provisional = (
-    cumulative_image.filter(ee.Filter.gt("year", initialCleaningYear + 1)).filter(
-        ee.Filter.lte("year", processing_year)
-    )
-).select("year")
-cumulative_export_desc = (
-    "CumulativeMineArea_"
-    + str(initialCleaningYear + 2)
-    + "-"
-    + str(processing_year - 1)
-)
-cumulative_provisional_export_desc = (
-    "CumulativeMineArea_" + str(initialCleaningYear + 2) + "-" + str(processing_year)
-)
-
-cumulativeArea_test_name = (
-    GCLOUD_EE_ANNUAL_MINES_CUMULATIVE_TIFF + cumulative_export_desc + ".tif"
-)
-cumulativeArea_provisional_test_name = (
-    GCLOUD_EE_ANNUAL_MINES_CUMULATIVE_TIFF
-    + cumulative_provisional_export_desc
-    + "_PROVISIONAL.tif"
-)
-cumulativeArea_fin_name = (
-    GCLOUD_EE_ANNUAL_MINES_CUMULATIVE_TIFF + cumulative_export_desc
-)
-cumulativeArea_provisional_fin_name = (
-    GCLOUD_EE_ANNUAL_MINES_CUMULATIVE_TIFF
-    + cumulative_provisional_export_desc
-    + "_PROVISIONAL"
-)
+cumulativeArea = (cumulative_image.filter(ee.Filter.gt("year", initialCleaningYear + 1)).filter(ee.Filter.lt("year", processing_year))).select("year")
+cumulativeArea_provisional = (cumulative_image.filter(ee.Filter.gt("year", initialCleaningYear + 1)).filter(ee.Filter.lte("year", processing_year))).select("year")
+cumulative_export_desc = ("CumulativeMineArea_" + str(initialCleaningYear + 2) + "-" + str(processing_year - 1))
+cumulative_provisional_export_desc = ("CumulativeMineArea_" + str(initialCleaningYear + 2) + "-" + str(processing_year))
+cumulativeArea_test_name = (GCLOUD_EE_ANNUAL_MINES_CUMULATIVE_TIFF + cumulative_export_desc + ".tif")
+cumulativeArea_provisional_test_name = (GCLOUD_EE_ANNUAL_MINES_CUMULATIVE_TIFF + cumulative_provisional_export_desc + "_PROVISIONAL.tif")
+cumulativeArea_fin_name = (GCLOUD_EE_ANNUAL_MINES_CUMULATIVE_TIFF + cumulative_export_desc)
+cumulativeArea_provisional_fin_name = (GCLOUD_EE_ANNUAL_MINES_CUMULATIVE_TIFF+ cumulative_provisional_export_desc+ "_PROVISIONAL")
 
 out_blob_raster_test_cumulative = storage_bucket.blob(cumulativeArea_test_name)
-out_blob_raster_test_cumulative_provisional = storage_bucket.blob(
-    cumulativeArea_provisional_test_name
-)
+out_blob_raster_test_cumulative_provisional = storage_bucket.blob(cumulativeArea_provisional_test_name)
 print(f"{cumulativeArea_test_name} & {cumulativeArea_provisional_test_name}")
 
 if out_blob_raster_test_cumulative.exists():
-    print(
-        f"  > {GCLOUD_EE_ANNUAL_MINES_CUMULATIVE_TIFF + cumulative_export_desc}.tif ALREADY EXISTS. PASSING."
-    )
+    print(f"  > {GCLOUD_EE_ANNUAL_MINES_CUMULATIVE_TIFF + cumulative_export_desc}.tif ALREADY EXISTS. PASSING.")
     pass
 else:
     cumulativeMiningFootprint = cumulativeArea.qualityMosaic("year")
@@ -560,13 +527,10 @@ else:
 
 
 if out_blob_raster_test_cumulative_provisional.exists():
-    print(
-        f"  > {GCLOUD_EE_ANNUAL_MINES_CUMULATIVE_TIFF + cumulative_provisional_export_desc}.tif ALREADY EXISTS. PASSING."
-    )
+    print(f"  > {GCLOUD_EE_ANNUAL_MINES_CUMULATIVE_TIFF + cumulative_provisional_export_desc}.tif ALREADY EXISTS. PASSING.")
     pass
 else:
     cumulativeMiningFootprint = cumulativeArea_provisional.qualityMosaic("year")
-
     raster_export = batch.Export.image.toCloudStorage(
         image=cumulativeMiningFootprint,
         description=cumulative_provisional_export_desc,
@@ -590,8 +554,8 @@ else:
         f"        > {cumulativeArea_provisional_test_name} cumulative mining image created."
     )
 
-########################################################################################################################
-########################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
 """
 ACCURACY ASSESSMENT
 """
