@@ -5,10 +5,10 @@ from ee import batch
 from google.cloud import storage
 
 from config import EE_SERVICE_ACCOUNT, EE_CREDENTIALS
-from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_EE_GPC_DIR
+from mtm_utils.variables import PROCESSING_YEAR, GCLOUD_BUCKET, GCLOUD_EE_GPC_DIR
 
 
-processing_year = datetime.date.today().year
+processing_year = PROCESSING_YEAR
 
 # The ID of your GCS bucket
 storage_client = storage.Client()
