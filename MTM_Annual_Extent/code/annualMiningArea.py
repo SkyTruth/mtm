@@ -6,6 +6,7 @@ from google.cloud import storage
 
 from config import EE_SERVICE_ACCOUNT, EE_CREDENTIALS
 from mtm_utils.variables import (
+    PROCESSING_YEAR, 
     GCLOUD_BUCKET,
     GCLOUD_EE_GPC_DIR,
     GCLOUD_MASK_DIR,
@@ -27,7 +28,7 @@ INITIAL SET-UP
 # Defining the processing year, which is the current year minus 1 (THIS WILL NEED TO BE CHANGED WHEN SETTING UP THE
 # FINAL CRON, SINCE USCB DATA WILL BE UPDATED). IN FUTURE THIS WILL EQUAL CURRENT YEAR
 # processing_year = (datetime.date.today().year)
-processing_year = 2024
+processing_year = PROCESSING_YEAR
 
 # Our cleaning process relies on the use of dummy images, these are used to clean the years immediately before and after
 # the years for which we have Landsat scenes. We need images of value 0 so that the nullCleaning2 function will work.
