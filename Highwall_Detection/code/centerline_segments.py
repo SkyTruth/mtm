@@ -1,5 +1,6 @@
 '''
 Reduces highwall geometries into centerlines, split at their junctions into individual branches.
+Divides longer branches into shorter segments.
 '''
 
 import centerline.geometry as cl
@@ -7,6 +8,7 @@ import geopandas as gpd
 import os
 import networkx as nx
 from shapely.geometry import LineString, Polygon, MultiPolygon
+import numpy as np
 
 #  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  Working directories
@@ -33,14 +35,18 @@ if os.path.isdir(outputs) != True:
 #  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Define paths to input highwall polygons and final output centerlines
-input_shp = inputs+"highwalls_1m.shp"
-output_shp = outputs+"centerline_branches.shp"
+input_highwalls = inputs+"testing_subset_highwalls.shp"
+temp_centerline_branches = temps+"centerline_branches_subset_test.shp"
+output_centerline_segments = outputs+"centerline_segments_subset_test.shp"
 
 # Set variables
 min_area = 100
 interp_distance = 4
 min_spur_length = 10
 min_branch_length = 20
+target_segment_length = 100
+max_segment_length = 150
+min_segment_length = 50 
 
 #  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  Processing
@@ -273,13 +279,13 @@ def graph_to_linestring(graph):
     return LineString(path)
 
 
-def extract_centerline_branches():
+def get_centerline_branches():
     """
     Reduces highwall geometries into centerlines, split at their junctions into individual branches.
     """
     print(f'Extracting centerline branches...')
     # Read input shapefile of highwall geometries
-    gdf = gpd.read_file(input_shp)
+    gdf = gpd.read_file(input_highwalls)
     # Clean highwall geometries
     cleaned_gdf = clean_highwalls(gdf)
     # Explode into individual highwalls
@@ -321,8 +327,74 @@ def extract_centerline_branches():
     # Save all centerline branches
     if len(centerline_branches) > 0:
         centerline_branches_gdf = gpd.GeoDataFrame(centerline_branches, geometry="geometry", crs=cleaned_gdf.crs)
-        centerline_branches_gdf.to_file(output_shp)
-    print(f'Centerline branches extracted.')
+        centerline_branches_gdf.to_file(temp_centerline_branches)
+    print(f'Processed {len(gdf)} highwalls into {len(centerline_branches_gdf)} centerline branches and saved to {temp_centerline_branches}.')
+
+
+def split_line(line, target_segment_length=target_segment_length, max_segment_length=max_segment_length, min_segment_length=min_segment_length):
+    """
+    Split a LineString into segments of approximately target_segment_length,
+    ensuring no segment is shorter than min_segment_length.
+    """
+    total_length = line.length
+    # If line is shorter than max_segment_length, return it as is
+    if total_length <= max_segment_length:
+        return [line]
+    # Calculate number of segments needed
+    n_segments = int(np.ceil(total_length / target_segment_length))
+    # Check if last segment would be too short
+    remainder = total_length % target_segment_length
+    if remainder < min_segment_length and n_segments > 1:
+        n_segments -= 1
+    # Calculate actual segment length
+    segment_length = total_length / n_segments
+    # Create segments
+    segments = []
+    coords = list(line.coords)
+    current_length = 0
+    segment_coords = [coords[0]]  # Start with first point
+    for i in range(1, len(coords)):
+        # Add length of current line segment
+        segment = LineString([coords[i-1], coords[i]])
+        current_length += segment.length
+        if current_length < segment_length:
+            # Keep adding points to current segment
+            segment_coords.append(coords[i])
+        else:
+            # Add the last point and create the segment
+            segment_coords.append(coords[i])
+            segments.append(LineString(segment_coords))
+            # Start new segment from this point
+            segment_coords = [coords[i]]
+            current_length = 0
+    # Add any remaining coordinates as the final segment
+    if len(segment_coords) >= 2:
+        segments.append(LineString(segment_coords))
+    return segments
+
+
+def get_centerline_segments():
+    # Read input shapefile of centerline branches
+    gdf = gpd.read_file(temp_centerline_branches)
+    # Initialize list to store centerline segment features
+    centerline_segment_features = []
+    # Process each centerline branch
+    for _, row in gdf.iterrows():
+        segments = split_line(row.geometry)
+        # Add each segment to list of features
+        for segment in segments:
+            centerline_segment_features.append({
+                'id': row['id'],
+                'geometry': segment,
+                'length': segment.length
+            })
+    # Create new GeoDataFrame
+    segments_gdf = gpd.GeoDataFrame(centerline_segment_features, crs=gdf.crs)
+    # Save to file
+    segments_gdf.to_file(output_centerline_segments)
+    print(f"Processed {len(gdf)} branches into {len(segments_gdf)} segments and saved to {output_centerline_segments}.")
+
 
 if __name__ == "__main__":
-    extract_centerline_branches()
+    get_centerline_branches()
+    get_centerline_segments()
