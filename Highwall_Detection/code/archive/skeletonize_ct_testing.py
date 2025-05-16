@@ -1,15 +1,27 @@
 from whitebox_workflows import WbEnvironment
-
-
 from osgeo import gdal, ogr, osr
 import rasterio
 import numpy as np
+import os
 from skimage.morphology import skeletonize
+
+from mtm_utils.variables import (
+    HW_TEMP_DIR,
+    HW_OUTPUT_DIR,
+    INPUT_HIGHWALLS
+)
+
+
+def data_dir_creation():
+    """
+    Makes temp and output directories if they do not exist.
+    """
+    os.makedirs(HW_TEMP_DIR, exist_ok=True)
+    os.makedirs(HW_OUTPUT_DIR, exist_ok=True)
 
 
 def inital_rasterize():
-    # highwall = "unreclaimed_cleaned.shp"
-    highwall = "test_set.shp"
+    highwall = INPUT_HIGHWALLS
 
     infile = ogr.Open(highwall)
     highwall_layer = infile.GetLayer()
@@ -25,8 +37,7 @@ def inital_rasterize():
     x_res = int(round((xmax - xmin) / pixel_size))
     y_res = int(round((ymax - ymin) / pixel_size))
 
-    # outfile = "unreclaimed_cleaned.tiff"
-    outfile = "FINAL_test_set.tiff"
+    outfile = HW_TEMP_DIR + "FINAL_test_set.tiff"
 
     target_ds = gdal.GetDriverByName("GTiff").Create(
         outfile, x_res, y_res, 1, eType=rdtype, options=["COMPRESS=DEFLATE"]
@@ -63,7 +74,7 @@ def inital_rasterize():
 
 def initial_skeletonize():
     # with rasterio.open("unreclaimed_cleaned.tiff") as src:
-    with rasterio.open("FINAL_test_set.tiff") as src:
+    with rasterio.open(HW_TEMP_DIR + "FINAL_test_set.tiff") as src:
         raster = src.read(1)  # Read the first band
         transform = src.transform
         crs = src.crs
@@ -75,8 +86,7 @@ def initial_skeletonize():
     skeleton = skeletonize(binary_raster, method="zhang")
 
     # Step 4: Save skeletonized raster to a new TIFF
-    output_tiff = "FINAL_skeletonized_test_set_zhang.tif"
-    # output_tiff = "skeletonized_unreclaimed_cleaned_zhang.tif"
+    output_tiff = HW_TEMP_DIR + "FINAL_skeletonized_test_set_zhang.tif"
     with rasterio.open(
         output_tiff,
         "w",
@@ -92,13 +102,13 @@ def initial_skeletonize():
 
 
 def final_cleaning():
-    print("Running coded from the best processing library in the world...")
+    print("Running code from the best processing library in the world...")
     wbe = WbEnvironment()
     # print(wbe.version()) # Print the version number
 
     # raster = wbe.read_raster('skeletonized_unreclaimed_cleaned_zhang.tif') # Read some kind of data
     raster = wbe.read_raster(
-        "FINAL_skeletonized_test_set_zhang.tif"
+        HW_TEMP_DIR + "FINAL_skeletonized_test_set_zhang.tif"
     )  # Read some kind of data
     # print(raster)
 
@@ -109,13 +119,13 @@ def final_cleaning():
     vectorized = wbe.raster_to_vector_lines(thinned)
 
     # Write Outfiles
-    wbe.write_raster(despurred, "skeletonized_test_set_zhang_depurred.tif", True)
-    wbe.write_raster(thinned, "skeletonized_test_set_zhang_depurred_thinned.tif", True)
-    wbe.write_vector(vectorized, "FULLY_CLEANED.shp")
+    wbe.write_raster(despurred, HW_TEMP_DIR + "skeletonized_test_set_zhang_depurred.tif", True)
+    wbe.write_raster(thinned, HW_TEMP_DIR + "skeletonized_test_set_zhang_depurred_thinned.tif", True)
+    wbe.write_vector(vectorized, HW_OUTPUT_DIR + "skeletonize_ct_test.shp")
 
 
 if __name__ == "__main__":
-    # testing()
+    data_dir_creation()
     inital_rasterize()
     initial_skeletonize()
     final_cleaning()
