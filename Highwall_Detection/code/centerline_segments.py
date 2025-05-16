@@ -10,47 +10,30 @@ import networkx as nx
 from shapely.geometry import LineString, Polygon, MultiPolygon
 import numpy as np
 
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  Working directories
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+from mtm_utils.variables import (
+    HW_TEMP_DIR,
+    HW_OUTPUT_DIR,
+    INPUT_HIGHWALLS,
+    TEMP_CLEANED_HIGHWALLS,
+    TEMP_CENTERLINE_BRANCHES,
+    OUTPUT_CENTERLINE_SEGMENTS,
+    MIN_AREA,
+    INTERP_DISTANCE,
+    MIN_SPUR_LENGTH,
+    MIN_BRANCH_LENGTH,
+    TARGET_SEGMENT_LENGTH,
+    MAX_SEGMENT_LENGTH,
+    MIN_SEGMENT_LENGTH
+)
 
-# Define directory root
-root = os.path.dirname(os.path.abspath(__file__))
 
-# Set up input, temp, and output directories
-inputs = root+"/inputs/"
-temps = root+"/temps/" 
-outputs = root+"/outputs/"
+def data_dir_creation():
+    """
+    Makes temp and output directories if they do not exist.
+    """
+    os.makedirs(HW_TEMP_DIR, exist_ok=True)
+    os.makedirs(HW_OUTPUT_DIR, exist_ok=True)
 
-# Create directories if they do not already exist
-if os.path.isdir(inputs) != True:
-        os.mkdir(inputs)
-if os.path.isdir(temps) != True:
-        os.mkdir(temps)
-if os.path.isdir(outputs) != True:
-        os.mkdir(outputs)
-
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  Setup
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# Define paths to input highwall polygons and final output centerlines
-input_highwalls = inputs+"testing_subset_highwalls.shp"
-temp_centerline_branches = temps+"centerline_branches_subset_test.shp"
-output_centerline_segments = outputs+"centerline_segments_subset_test.shp"
-
-# Set variables
-min_area = 100
-interp_distance = 4
-min_spur_length = 10
-min_branch_length = 20
-target_segment_length = 100
-max_segment_length = 150
-min_segment_length = 50 
-
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  Processing
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def clean_highwalls(gdf):
     """
@@ -62,22 +45,22 @@ def clean_highwalls(gdf):
     # Buffer to maintain 8-connectivity
     repro_gdf["geometry"] = repro_gdf["geometry"].buffer(1.0)
     # Remove holes
-    def remove_holes(geom, min_area=min_area):
+    def remove_holes(geom):
         if isinstance(geom, Polygon):
             if geom.interiors:
                 new_interiors = [
                     ring for ring in geom.interiors 
-                    if Polygon(ring).area >= min_area
+                    if Polygon(ring).area >= MIN_AREA
                 ]
                 return Polygon(geom.exterior, new_interiors)
             return geom
         # Handle MultiPolygon case
         elif isinstance(geom, MultiPolygon):
-            return MultiPolygon([remove_holes(poly, min_area) for poly in geom.geoms])
+            return MultiPolygon([remove_holes(poly) for poly in geom.geoms])
         return geom
     repro_gdf["geometry"] = repro_gdf["geometry"].apply(remove_holes)
     # Save features to temp file
-    repro_gdf.to_file(temps+"cleaned_highwalls.shp")
+    repro_gdf.to_file(TEMP_CLEANED_HIGHWALLS)
     print(f'Highwalls cleaned.')
     return repro_gdf
 
@@ -91,12 +74,12 @@ def get_centerlines(row):
         poly = row.geometry
         try:
             c_line = cl.Centerline(poly,
-                                interpolation_distance=interp_distance,
+                                interpolation_distance=INTERP_DISTANCE,
                                 interpolation_options={'qhull_options': 'QJ Qbb'})
         except:
             try: # If that fails, try with a smaller interpolation distance
                 c_line = cl.Centerline(poly,
-                                    interpolation_distance=max(0.5,interp_distance/2),
+                                    interpolation_distance=max(0.5,INTERP_DISTANCE/2),
                                     interpolation_options={'qhull_options': 'QJ Qbb QbB'})
             except: # If that still fails, try with minimum settings
                 c_line = cl.Centerline(poly,
@@ -126,9 +109,9 @@ def build_graph_from_centerlines(cl):
     return graph
 
 
-def prune_short_spurs(graph, min_length):
+def prune_short_spurs(graph):
     """
-    Removes spurs (paths from endpoint to junction) shorter than min_length to clean up centerlines.
+    Removes spurs (paths from endpoint to junction) shorter than MIN_SPUR_LENGTH to clean up centerlines.
     """
     print(f'Pruning short spurs...')
     # Find endpoints
@@ -147,7 +130,7 @@ def prune_short_spurs(graph, min_length):
                 break
             elif len(neighbors) > 2:  # Junction
                 # Mark short spurs for removal
-                if path_length < min_length:
+                if path_length < MIN_SPUR_LENGTH:
                     for i in range(len(path)-1):
                         edges_to_remove.add((path[i], path[i+1]))
                         edges_to_remove.add((path[i+1], path[i]))
@@ -170,7 +153,7 @@ def prune_short_spurs(graph, min_length):
 def split_into_branches(graph):
     """
     Splits a graph at its junction nodes (degree > 2) into individual branches.
-    Branches shorter than min_branch_length are removed.
+    Branches shorter than MIN_BRANCH_LENGTH are removed.
     """
     print(f'Splitting into branches...')
     # If no edges, return empty list
@@ -212,8 +195,8 @@ def split_into_branches(graph):
                             # Remove these edges from remaining_graph
                             if remaining_graph.has_edge(u, v):
                                 remaining_graph.remove_edge(u, v)
-                        # Only add branch if it's longer than min_branch_length
-                        if branch_length >= min_branch_length:
+                        # Only add branch if it's longer than MIN_BRANCH_LENGTH
+                        if branch_length >= MIN_BRANCH_LENGTH:
                             branches.append(branch)
             except nx.NetworkXNoPath:
                 continue
@@ -233,10 +216,10 @@ def split_into_branches(graph):
                     for edge in remaining_edges[:]:  # Use slice to allow removal
                         if edge[0] in (u, v) or edge[1] in (u, v):
                             edge_stack.append(edge)
-            # Only add branch if it's longer than min_branch_length
+            # Only add branch if it's longer than MIN_BRANCH_LENGTH
             if len(branch.edges) > 0:
                 branch_length = sum(data['weight'] for _, _, data in branch.edges(data=True))
-                if branch_length >= min_branch_length:
+                if branch_length >= MIN_BRANCH_LENGTH:
                     branches.append(branch)
     print(f'Centerlines split into branches.')
     return branches
@@ -285,7 +268,7 @@ def get_centerline_branches():
     """
     print(f'Extracting centerline branches...')
     # Read input shapefile of highwall geometries
-    gdf = gpd.read_file(input_highwalls)
+    gdf = gpd.read_file(INPUT_HIGHWALLS)
     # Clean highwall geometries
     cleaned_gdf = clean_highwalls(gdf)
     # Explode into individual highwalls
@@ -300,7 +283,7 @@ def get_centerline_branches():
             # Convert centerlines to graph
             graph = build_graph_from_centerlines(c_line)
             # Prune short spurs
-            graph = prune_short_spurs(graph, min_length=min_spur_length)
+            graph = prune_short_spurs(graph)
             if len(graph.edges) > 0:
                 # Check if centerline graph has junctions
                 has_junctions = any(degree > 2 for _, degree in graph.degree())
@@ -327,24 +310,24 @@ def get_centerline_branches():
     # Save all centerline branches
     if len(centerline_branches) > 0:
         centerline_branches_gdf = gpd.GeoDataFrame(centerline_branches, geometry="geometry", crs=cleaned_gdf.crs)
-        centerline_branches_gdf.to_file(temp_centerline_branches)
-    print(f'Processed {len(gdf)} highwalls into {len(centerline_branches_gdf)} centerline branches and saved to {temp_centerline_branches}.')
+        centerline_branches_gdf.to_file(TEMP_CENTERLINE_BRANCHES)
+    print(f'Processed {len(gdf)} highwalls into {len(centerline_branches_gdf)} centerline branches and saved to {TEMP_CENTERLINE_BRANCHES}.')
 
 
-def split_line(line, target_segment_length=target_segment_length, max_segment_length=max_segment_length, min_segment_length=min_segment_length):
+def split_line(line):
     """
     Split a LineString into segments of approximately target_segment_length,
-    ensuring no segment is shorter than min_segment_length.
+    ensuring no segment is shorter than MIN_SEGMENT_LENGTH.
     """
     total_length = line.length
-    # If line is shorter than max_segment_length, return it as is
-    if total_length <= max_segment_length:
+    # If line is shorter than MAX_SEGMENT_LENGTH, return it as is
+    if total_length <= MAX_SEGMENT_LENGTH:
         return [line]
     # Calculate number of segments needed
-    n_segments = int(np.ceil(total_length / target_segment_length))
+    n_segments = int(np.ceil(total_length / TARGET_SEGMENT_LENGTH))
     # Check if last segment would be too short
-    remainder = total_length % target_segment_length
-    if remainder < min_segment_length and n_segments > 1:
+    remainder = total_length % TARGET_SEGMENT_LENGTH
+    if remainder < MIN_SEGMENT_LENGTH and n_segments > 1:
         n_segments -= 1
     # Calculate actual segment length
     segment_length = total_length / n_segments
@@ -375,7 +358,7 @@ def split_line(line, target_segment_length=target_segment_length, max_segment_le
 
 def get_centerline_segments():
     # Read input shapefile of centerline branches
-    gdf = gpd.read_file(temp_centerline_branches)
+    gdf = gpd.read_file(TEMP_CENTERLINE_BRANCHES)
     # Initialize list to store centerline segment features
     centerline_segment_features = []
     # Process each centerline branch
@@ -391,10 +374,11 @@ def get_centerline_segments():
     # Create new GeoDataFrame
     segments_gdf = gpd.GeoDataFrame(centerline_segment_features, crs=gdf.crs)
     # Save to file
-    segments_gdf.to_file(output_centerline_segments)
-    print(f"Processed {len(gdf)} branches into {len(segments_gdf)} segments and saved to {output_centerline_segments}.")
+    segments_gdf.to_file(OUTPUT_CENTERLINE_SEGMENTS)
+    print(f"Processed {len(gdf)} branches into {len(segments_gdf)} segments and saved to {OUTPUT_CENTERLINE_SEGMENTS}.")
 
 
 if __name__ == "__main__":
+    data_dir_creation()
     get_centerline_branches()
     get_centerline_segments()

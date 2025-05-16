@@ -11,30 +11,23 @@ import pandas as pd
 import multiprocessing as mp
 import pyogrio
 
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  Working directories
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+from mtm_utils.variables import (
+    HW_DATA_DIR,
+    HW_TEMP_DIR,
+    HW_OUTPUT_DIR,
+    INPUT_HIGHWALLS
+)
 
-# Define directory root
-root = os.path.dirname(os.path.abspath(__file__))
-wbe.working_directory = root
+wbe.working_directory = HW_DATA_DIR
 
-# Set up input, temp, and output directories
-inputs = root+"/inputs/"
-temps = root+"/temps/" 
-outputs = root+"/outputs/"
 
-# Create directories if they do not already exist
-if os.path.isdir(inputs) != True:
-        os.mkdir(inputs)
-if os.path.isdir(temps) != True:
-        os.mkdir(temps)
-if os.path.isdir(outputs) != True:
-        os.mkdir(outputs)
+def data_dir_creation():
+    """
+    Makes temp and output directories if they do not exist.
+    """
+    os.makedirs(HW_TEMP_DIR, exist_ok=True)
+    os.makedirs(HW_OUTPUT_DIR, exist_ok=True)
 
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  Processing
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 vector_lines = []
 
@@ -44,11 +37,11 @@ def process_highwall(args):
 
     # Define file paths
     highwall_id = f'highwall_{idx}'
-    polygon_path = temps+f"{highwall_id}_polygon.shp"
-    raster_path = temps+f"{highwall_id}_raster.tif"
-    skeleton_path = temps+f"{highwall_id}_skeleton.tif"
-    despurred_path = temps+f"{highwall_id}_despurred.tif"
-    line_path = temps+f"{highwall_id}_lines.shp"
+    polygon_path = HW_TEMP_DIR + f"{highwall_id}_polygon.shp"
+    raster_path = HW_TEMP_DIR + f"{highwall_id}_raster.tif"
+    skeleton_path = HW_TEMP_DIR + f"{highwall_id}_skeleton.tif"
+    despurred_path = HW_TEMP_DIR + f"{highwall_id}_despurred.tif"
+    line_path = HW_TEMP_DIR + f"{highwall_id}_lines.shp"
 
     if not os.path.exists(line_path):
 
@@ -104,10 +97,10 @@ def process_highwall(args):
 
         # Delete intermediate files.
         os.remove(polygon_path)
-        os.remove(temps+f"{highwall_id}_polygon.cpg")
-        os.remove(temps+f"{highwall_id}_polygon.dbf")
-        os.remove(temps+f"{highwall_id}_polygon.prj")
-        os.remove(temps+f"{highwall_id}_polygon.shx")
+        os.remove(HW_TEMP_DIR + f"{highwall_id}_polygon.cpg")
+        os.remove(HW_TEMP_DIR + f"{highwall_id}_polygon.dbf")
+        os.remove(HW_TEMP_DIR + f"{highwall_id}_polygon.prj")
+        os.remove(HW_TEMP_DIR + f"{highwall_id}_polygon.shx")
         print('Polygon files deleted.')
         
         # Skeletonize
@@ -169,10 +162,10 @@ def process_highwall(args):
     # print(f'Vector lines list: {vector_lines}')
     return vector_lines
 
+
 # Iterate through all polygons in a shapefile
 def parallelize():
-    input_shp = inputs+"test_set.shp"
-    gdf = gpd.read_file(input_shp)
+    gdf = gpd.read_file(INPUT_HIGHWALLS)
     proj_crs = gdf.crs
     
     # Process highwalls
@@ -197,9 +190,11 @@ def parallelize():
     # gdfs = [gpd.GeoDataFrame(pyogrio.read_dataframe(shp)) for shp in shapefiles]
     # merged_gdf = gpd.GeoDataFrame(pd.concat(gdfs, ignore_index=True))
     
-    output_shp = outputs+"output.shp"
+    output_shp = HW_OUTPUT_DIR + "skeletonize_al_test.shp"
     merged_gdf.to_file(output_shp)
     print(f"Processing complete. Output saved to {output_shp}")
 
+
 if __name__ == "__main__":
+    data_dir_creation()
     parallelize()

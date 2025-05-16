@@ -64,4 +64,30 @@ GCLOUD_FINAL_DATA_GEOJSON = GCLOUD_FINAL_DATA_DIR + "GEOJSON/"
 GCLOUD_FINAL_DATA_GEOTIFF = GCLOUD_FINAL_DATA_DIR + "GEOTIFF/"
 GCLOUD_FINAL_DATA_GEOTIFF_CUMULATIVE = GCLOUD_FINAL_DATA_DIR + "GEOTIFF_CUMULATIVE/"
 
+
+"""
+Highwall Detection Variables
+"""
+
+# Set up directories and filenames for storing temp and output files
+HW_DATA_DIR = DATA_DIR + "highwalls/"
+HW_INPUT_DIR = HW_DATA_DIR + "inputs/"
+HW_TEMP_DIR = HW_DATA_DIR + "temps/"
+HW_OUTPUT_DIR = HW_DATA_DIR + "outputs/"
+
+INPUT_HIGHWALLS = HW_INPUT_DIR + "testing_subset_highwalls.shp"
+TEMP_CLEANED_HIGHWALLS = HW_TEMP_DIR + "cleaned_highwalls.shp"
+TEMP_CENTERLINE_BRANCHES = HW_TEMP_DIR + "centerline_branches.shp"
+OUTPUT_CENTERLINE_SEGMENTS = HW_OUTPUT_DIR + "centerline_segments.shp"
+
+# Define variables for processing
+MIN_AREA = 100
+INTERP_DISTANCE = 4
+MIN_SPUR_LENGTH = 10
+MIN_BRANCH_LENGTH = 20
+TARGET_SEGMENT_LENGTH = 100
+MAX_SEGMENT_LENGTH = 150
+MIN_SEGMENT_LENGTH = 50 
+
+
 # TODO: add remaining variables

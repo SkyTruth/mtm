@@ -1,42 +1,33 @@
+'''
+Extracts centerline branches from highwall geometries by iteratively extracting the longest spine
+from a centerline graph.
+'''
+
 import centerline.geometry as cl
 import geopandas as gpd
 import os
 import networkx as nx
 from shapely.geometry import LineString, Polygon, MultiPolygon
 
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  Working directories
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+from mtm_utils.variables import (
+    HW_TEMP_DIR,
+    HW_OUTPUT_DIR,
+    INPUT_HIGHWALLS,
+    TEMP_CLEANED_HIGHWALLS,
+    MIN_AREA,
+    INTERP_DISTANCE,
+    MIN_SPUR_LENGTH,
+    MIN_BRANCH_LENGTH
+)
 
-# Define directory root
-root = os.path.dirname(os.path.abspath(__file__))
 
-# Set up input, temp, and output directories
-inputs = root+"/inputs/"
-temps = root+"/temps/" 
-outputs = root+"/outputs/"
+def data_dir_creation():
+    """
+    Makes temp and output directories if they do not exist.
+    """
+    os.makedirs(HW_TEMP_DIR, exist_ok=True)
+    os.makedirs(HW_OUTPUT_DIR, exist_ok=True)
 
-# Create directories if they do not already exist
-if os.path.isdir(inputs) != True:
-        os.mkdir(inputs)
-if os.path.isdir(temps) != True:
-        os.mkdir(temps)
-if os.path.isdir(outputs) != True:
-        os.mkdir(outputs)
-
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  Processing
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# Define paths to input highwall polygons and final output centerlines
-input_shp = inputs+"highwalls_1m.shp"
-output_shp = outputs+"highwall_skeletons.shp"
-
-# Variables
-min_area = 100
-interp_distance = 2
-min_spur_length = 10
-min_branch_length = 20
 
 def clean_highwalls(gdf):
     """
@@ -45,18 +36,18 @@ def clean_highwalls(gdf):
     # Reproject to EPSG:32617
     repro_gdf = gdf.to_crs(epsg=32617)
 
-    def remove_holes(geom, min_area=min_area):
+    def remove_holes(geom):
         if isinstance(geom, Polygon):
             if geom.interiors:
                 new_interiors = [
                     ring for ring in geom.interiors 
-                    if Polygon(ring).area >= min_area
+                    if Polygon(ring).area >= MIN_AREA
                 ]
                 return Polygon(geom.exterior, new_interiors)
             return geom
         # Handle MultiPolygon case
         elif isinstance(geom, MultiPolygon):
-            return MultiPolygon([remove_holes(poly, min_area) for poly in geom.geoms])
+            return MultiPolygon([remove_holes(poly) for poly in geom.geoms])
         return geom
 
     # Apply the hole removal function to each geometry
@@ -65,7 +56,7 @@ def clean_highwalls(gdf):
     # Buffer to maintain 8-connectivity
     repro_gdf["geometry"] = repro_gdf["geometry"].buffer(1.0)
 
-    repro_gdf.to_file(temps+"cleaned_highwalls.shp")
+    repro_gdf.to_file(TEMP_CLEANED_HIGHWALLS)
     
     return repro_gdf
 
@@ -79,12 +70,12 @@ def get_centerlines(row):
 
         try:
             c_line = cl.Centerline(poly,
-                                interpolation_distance=interp_distance,
+                                interpolation_distance=INTERP_DISTANCE,
                                 interpolation_options={'qhull_options': 'QJ Qbb'})
         except:
             try: # If that fails, try with a smaller interpolation distance
                 c_line = cl.Centerline(poly,
-                                    interpolation_distance=max(0.5,interp_distance/2),
+                                    interpolation_distance=max(0.5,INTERP_DISTANCE/2),
                                     interpolation_options={'qhull_options': 'QJ Qbb QbB'})
             except: # If that still fails, try with minimum settings
                 c_line = cl.Centerline(poly,
@@ -165,7 +156,7 @@ def find_longest_spine(graph):
         print(f"Error in find_longest_spine: {str(e)}")
         return None
 
-def extract_all_spines(cl, min_length=min_branch_length):
+def extract_all_spines(cl):
     """
     Iteratively extracts all spines above minimum length from a centerline
     """
@@ -199,7 +190,7 @@ def extract_all_spines(cl, min_length=min_branch_length):
                 break
             elif len(neighbors) > 2:  # Junction
                 # Mark short spurs for removal
-                if path_length < min_spur_length:
+                if path_length < MIN_SPUR_LENGTH:
                     for i in range(len(path)-1):
                         edges_to_remove.add((path[i], path[i+1]))
                         edges_to_remove.add((path[i+1], path[i]))  # Add reverse edge too
@@ -236,7 +227,7 @@ def extract_all_spines(cl, min_length=min_branch_length):
         
         # If subgraph is too small, skip it
         total_length = sum(data['weight'] for _, _, data in subgraph.edges(data=True))
-        if total_length < min_length:
+        if total_length < MIN_BRANCH_LENGTH:
             break
             
         # Find the longest spine in this component
@@ -246,7 +237,7 @@ def extract_all_spines(cl, min_length=min_branch_length):
             
         # Calculate spine length
         spine_length = sum(data['weight'] for _, _, data in spine_graph.edges(data=True))
-        if spine_length < min_length:
+        if spine_length < MIN_BRANCH_LENGTH:
             break
         
         # Add spine edges to all_spines graph
@@ -317,7 +308,7 @@ def split_at_junctions(graph):
                                 remaining_graph.remove_edge(u, v)
                         
                         # Only add branch if it's longer than min_branch_length
-                        if branch_length >= min_branch_length:
+                        if branch_length >= MIN_BRANCH_LENGTH:
                             branches.append(branch)
             except nx.NetworkXNoPath:
                 continue
@@ -344,7 +335,7 @@ def split_at_junctions(graph):
             # Only add branch if it's longer than min_branch_length
             if len(branch.edges) > 0:
                 branch_length = sum(data['weight'] for _, _, data in branch.edges(data=True))
-                if branch_length >= min_branch_length:
+                if branch_length >= MIN_BRANCH_LENGTH:
                     branches.append(branch)
     
     return branches
@@ -364,7 +355,7 @@ def get_skeletons():
     """
     Takes a shapefile of highwall polygons and extracts skeletons and branches.
     """
-    gdf = gpd.read_file(input_shp)
+    gdf = gpd.read_file(INPUT_HIGHWALLS)
     cleaned_gdf = clean_highwalls(gdf)
     ex_gdf = cleaned_gdf.explode(index_parts=False)
 
@@ -413,9 +404,10 @@ def get_skeletons():
         # Remove any empty or invalid geometries
         clipped_gdf = clipped_gdf[clipped_gdf.geometry.length > 0]
         
-        clipped_gdf.to_file(output_shp)
+        clipped_gdf.to_file(HW_OUTPUT_DIR + "spine_extraction_test.shp")
         print(f"Saved {len(clipped_gdf)} features after clipping")
 
 
 if __name__ == "__main__":
+    data_dir_creation()
     get_skeletons()

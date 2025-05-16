@@ -1,40 +1,27 @@
 '''
-For testing and modifying just the get_centerlines function.
+For testing and modifying just the get_centerlines() function.
 '''
 
 import centerline.geometry as cl
 import geopandas as gpd
 import os
 from shapely.geometry import Polygon, MultiPolygon
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  Working directories
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Define directory root
-root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+from mtm_utils.variables import (
+    HW_TEMP_DIR,
+    HW_OUTPUT_DIR,
+    INPUT_HIGHWALLS,
+    INTERP_DISTANCE,
+    TEMP_CLEANED_HIGHWALLS,
+)
 
-# Set up input, temp, and output directories
-inputs = root+"/inputs/"
-temps = root+"/temps/" 
-outputs = root+"/outputs/"
 
-# Create directories if they do not already exist
-if os.path.isdir(inputs) != True:
-        os.mkdir(inputs)
-if os.path.isdir(temps) != True:
-        os.mkdir(temps)
-if os.path.isdir(outputs) != True:
-        os.mkdir(outputs)
-
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  Processing
-#  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# Define paths to input highwall polygons and final output centerlines
-input_shp = inputs+"unreclaimed_uncleaned.shp"
-output_shp = outputs+"test_centerlines_4_clipped.shp"
-
-interp_distance = 4
+def data_dir_creation():
+    """
+    Makes temp and output directories if they do not exist.
+    """
+    os.makedirs(HW_TEMP_DIR, exist_ok=True)
+    os.makedirs(HW_OUTPUT_DIR, exist_ok=True)
 
 
 def clean_highwalls(gdf):
@@ -64,7 +51,7 @@ def clean_highwalls(gdf):
     # Buffer to maintain 8-connectivity
     repro_gdf["geometry"] = repro_gdf["geometry"].buffer(1.0)
 
-    repro_gdf.to_file(temps+"cleaned_highwalls.shp")
+    repro_gdf.to_file(TEMP_CLEANED_HIGHWALLS)
     
     return repro_gdf
 
@@ -72,7 +59,7 @@ def clean_highwalls(gdf):
 def get_centerlines():
     # Read in highwall polygons
 
-    gdf = gpd.read_file(input_shp)
+    gdf = gpd.read_file(INPUT_HIGHWALLS)
     cleaned_gdf = clean_highwalls(gdf)
     ex_gdf = cleaned_gdf.explode(index_parts=False)
 
@@ -86,12 +73,12 @@ def get_centerlines():
 
             try:
                 c_line = cl.Centerline(poly,
-                                    interpolation_distance=interp_distance,
+                                    interpolation_distance=INTERP_DISTANCE,
                                     interpolation_options={'qhull_options': 'QJ Qbb'})
             except:
                 try: # If that fails, try with a smaller interpolation distance
                     c_line = cl.Centerline(poly,
-                                        interpolation_distance=max(0.5,interp_distance/2),
+                                        interpolation_distance=max(0.5,INTERP_DISTANCE/2),
                                         interpolation_options={'qhull_options': 'QJ Qbb QbB'})
                 except: # If that still fails, try with minimum settings
                     c_line = cl.Centerline(poly,
@@ -140,8 +127,10 @@ def get_centerlines():
 
     # Save the final skeletons to a shapefile
     centerline_gdf = gpd.GeoDataFrame(c_lines, geometry="geometry", crs=gdf.crs)
+    output_shp = HW_TEMP_DIR + "test_centerlines.shp"
     centerline_gdf.to_file(output_shp)
     print(f"Saved final centerlines to {output_shp}")
 
 if __name__ == "__main__":
+    data_dir_creation()
     get_centerlines()
