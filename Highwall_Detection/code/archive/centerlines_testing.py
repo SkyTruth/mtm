@@ -10,10 +10,15 @@ from shapely.geometry import Polygon, MultiPolygon
 from mtm_utils.variables import (
     HW_TEMP_DIR,
     HW_OUTPUT_DIR,
-    INPUT_HIGHWALLS,
+    INPUT_HIGHWALLS_TESTING,
+    INPUT_HIGHWALLS_FULL,
     INTERP_DISTANCE,
     TEMP_CLEANED_HIGHWALLS,
 )
+
+# Set  = INPUT_HIGHWALLS_TESTING to test code with a smaller subset of highwalls
+# or  = INPUT_HIGHWALLS_FULL to process full dataset of highwalls
+INPUT_HIGHWALLS = INPUT_HIGHWALLS_FULL
 
 
 def data_dir_creation():

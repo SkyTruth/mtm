@@ -12,13 +12,18 @@ from shapely.geometry import LineString, Polygon, MultiPolygon
 from mtm_utils.variables import (
     HW_TEMP_DIR,
     HW_OUTPUT_DIR,
-    INPUT_HIGHWALLS,
+    INPUT_HIGHWALLS_TESTING,
+    INPUT_HIGHWALLS_FULL,
     TEMP_CLEANED_HIGHWALLS,
     MIN_AREA,
     INTERP_DISTANCE,
     MIN_SPUR_LENGTH,
     MIN_BRANCH_LENGTH
 )
+
+# Set  = INPUT_HIGHWALLS_TESTING to test code with a smaller subset of highwalls
+# or  = INPUT_HIGHWALLS_FULL to process full dataset of highwalls
+INPUT_HIGHWALLS = INPUT_HIGHWALLS_FULL
 
 
 def data_dir_creation():

@@ -13,7 +13,8 @@ import numpy as np
 from mtm_utils.variables import (
     HW_TEMP_DIR,
     HW_OUTPUT_DIR,
-    INPUT_HIGHWALLS,
+    INPUT_HIGHWALLS_TESTING,
+    INPUT_HIGHWALLS_FULL,
     TEMP_CLEANED_HIGHWALLS,
     TEMP_CENTERLINE_BRANCHES,
     OUTPUT_CENTERLINE_SEGMENTS,
@@ -25,6 +26,11 @@ from mtm_utils.variables import (
     MAX_SEGMENT_LENGTH,
     MIN_SEGMENT_LENGTH
 )
+
+
+# Set  = INPUT_HIGHWALLS_TESTING to test code with a smaller subset of highwalls
+# or  = INPUT_HIGHWALLS_FULL to process full dataset of highwalls
+INPUT_HIGHWALLS = INPUT_HIGHWALLS_FULL
 
 
 def data_dir_creation():
