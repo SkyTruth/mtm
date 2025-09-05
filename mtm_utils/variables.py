@@ -76,7 +76,7 @@ HW_TEMP_DIR = HW_DATA_DIR + "temps/"
 HW_OUTPUT_DIR = HW_DATA_DIR + "outputs/"
 
 INPUT_HIGHWALLS_TESTING = HW_INPUT_DIR + "testing_subset_highwalls.shp"
-INPUT_HIGHWALLS_FULL = "highwalls_1m.shp"
+INPUT_HIGHWALLS_FULL = HW_INPUT_DIR + "highwalls_1m.shp"
 TEMP_CLEANED_HIGHWALLS = HW_TEMP_DIR + "cleaned_highwalls.shp"
 TEMP_CENTERLINE_BRANCHES = HW_TEMP_DIR + "centerline_branches.shp"
 OUTPUT_CENTERLINE_SEGMENTS = HW_OUTPUT_DIR + "centerline_segments.shp"

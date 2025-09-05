@@ -301,7 +301,7 @@ def get_centerline_branches():
                         branch_geom = graph_to_linestring(branch)
                         if branch_geom is not None:
                             centerline_branches.append({
-                                "id": row["ID"],
+                                "ID": row["ID"],
                                 "geometry": branch_geom
                             })
                 else:
@@ -309,7 +309,7 @@ def get_centerline_branches():
                     cl_geom = graph_to_linestring(graph)
                     if cl_geom is not None:
                         centerline_branches.append({
-                            "id": row["ID"],
+                            "ID": row["ID"],
                             "geometry": cl_geom
                         })
 
@@ -373,7 +373,7 @@ def get_centerline_segments():
         # Add each segment to list of features
         for segment in segments:
             centerline_segment_features.append({
-                'id': row['id'],
+                'ID': row['ID'],
                 'geometry': segment,
                 'length': segment.length
             })
