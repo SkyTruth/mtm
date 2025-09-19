@@ -12,3 +12,4 @@ data/highwalls/outputs/*
 .DS_Store
 Highwall_Detection/.DS_Store
 Highwall_Detection/code/.DS_Store
+cloud-sql-proxy
