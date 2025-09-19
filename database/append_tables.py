@@ -1,7 +1,7 @@
 import json
 import geopandas as gpd
 import pandas as pd
-from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION, INTEGER, TEXT
+from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION, INTEGER, TEXT, FLOAT
 from geoalchemy2 import Geometry
 from google.cloud import storage
 from mtm_utils.cloud_sql_utils import connect_tcp_socket
@@ -106,7 +106,46 @@ def append_to_annual_mining_table_from_gcs():
     print(f"Data from: {file_path_name} apppended to {table_name}.")
 
 
+def append_to_highwall_centerline_table_from_local():
+    engine = connect_tcp_socket()
+
+    infile = "~/Desktop/MTM_API_SANDBOX/centerline_segments_SAMPLE.geojson"
+    
+    # Options for d_status are: "final" for fully cleaned products or "provisional" for
+    # partially cleaned products. This is written into the data_status column of the table
+    # during upload.
+    table_name = "highwall_centerlines"
+
+    gdf = gpd.read_file(infile)
+    df = gdf
+
+    df = df.rename(columns={
+        "ID": "id",
+        "length": "detect_length",
+        "geometry": "geom",
+    })
+    print(df.head(3))
+
+    with engine.begin() as conn:
+        df.to_sql(
+            table_name,
+            con=conn,
+            if_exists="append",
+            index=False,          # avoid stray index column
+            method="multi",
+            chunksize=1000,
+            dtype={
+                "id": TEXT(),
+                "detect_length": FLOAT(),
+                "geom": Geometry("MultiLineString", srid=4326)
+             },
+        )
+    print(f"Data from: {infile} apppended to {table_name}.")
+
+
+
 if __name__ == "__main__":
     # append_to_annual_mining_table_from_local()
-    append_to_annual_mining_table_from_gcs()
+    # append_to_annual_mining_table_from_gcs()
+    append_to_highwall_centerline_table_from_local()
 
