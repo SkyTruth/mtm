@@ -76,7 +76,7 @@ def create_highwall_centerlines_table():
         CREATE TABLE IF NOT EXISTS {table_name} (
             id              TEXT PRIMARY KEY,
             detect_length   FLOAT,
-            geom            geometry(MultiPolygon, 4326)
+            geom            geometry(MultiLineString, 4326)
         );
     """
 
