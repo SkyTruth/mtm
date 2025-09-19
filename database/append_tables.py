@@ -1,14 +1,10 @@
-from mtm_utils.cloud_sql_utils import connect_tcp_socket
-import sqlalchemy
-import os
-import csv
 import json
-import pandas as pd
 import geopandas as gpd
+import pandas as pd
 from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION, INTEGER, TEXT
 from geoalchemy2 import Geometry
-
 from google.cloud import storage
+from mtm_utils.cloud_sql_utils import connect_tcp_socket
 from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_FINAL_DATA_GEOJSON
 
 
@@ -35,7 +31,6 @@ def append_to_annual_mining_table_from_local():
     })
     print(df.head(3))
 
-    # # print(type(df))
     with engine.begin() as conn:
         df.to_sql(
             table_name,
@@ -61,22 +56,15 @@ def append_to_annual_mining_table_from_gcs():
     bucket_name = GCLOUD_BUCKET
     storage_bucket = storage_client.bucket(bucket_name)
 
-    # # Get all the images produced from greenestPixelComp.py
-    # for f in storage_client.list_blobs(bucket_name, prefix=GCLOUD_FINAL_DATA_GEOJSON):
-    #     fName = f.name
-    #     mine_names.append(fName)
-
-    # mine_names.pop(0)
-    # final_file_index = len(mine_names)
-
-
     engine = connect_tcp_socket()
-    # for i in mine_names[0:1]:
-    #     print(i)
+
+    # Options for d_status are: "final" for fully cleaned products or "provisional" for
+    # partially cleaned products. This is written into the data_status column of the table
+    # during upload.
     table_name = "annual_mining"
     d_status = "final"
 
-    file_path_name = "gee_data/FINAL_DATA/GEOJSON/1985_activeMining.geojson"
+    file_path_name = GCLOUD_FINAL_DATA_GEOJSON+"1985_activeMining.geojson"
     blob = storage_bucket.blob(file_path_name)
 
     # Download the blob as a string and decode it

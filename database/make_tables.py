@@ -1,5 +1,5 @@
-from mtm_utils.cloud_sql_utils import connect_tcp_socket
 import sqlalchemy
+from mtm_utils.cloud_sql_utils import connect_tcp_socket
 
 
 def create_test_table():
