@@ -1,5 +1,6 @@
-from config import CSQL_UN, CSQL_PW, CSQL_DB, LOCAL_HOST, LOCAL_PORT
 import sqlalchemy
+from shapely import to_wkb, from_wkb
+from config import CSQL_UN, CSQL_PW, CSQL_DB, LOCAL_HOST, LOCAL_PORT
 
 
 def connect_tcp_socket() -> sqlalchemy.engine.base.Engine:
@@ -25,3 +26,10 @@ def connect_tcp_socket() -> sqlalchemy.engine.base.Engine:
         ),
     )
     return pool
+
+
+def geom_convert_3d_to_2d(geom):
+    if geom is None:
+        return None
+    # force output_dimension=2
+    return from_wkb(to_wkb(geom, output_dimension=2))
