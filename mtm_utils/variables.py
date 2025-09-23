@@ -163,6 +163,10 @@ TARGET_SEGMENT_LENGTH = 100
 MAX_SEGMENT_LENGTH = 150
 MIN_SEGMENT_LENGTH = 50
 
+"""
+SQL Database Variables
+"""
+
 # Define the dtype format dictionaries for appending dataframes to sql.
 annual_mining_format_dict = {
     "id": TEXT(),
