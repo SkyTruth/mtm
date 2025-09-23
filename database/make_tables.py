@@ -177,8 +177,8 @@ def create_permits_table():
 
 
 if __name__ == "__main__":
-    # create_annual_mining_table()
-    # create_cumulative_mining_table()
-    # create_highwall_centerlines_table()
-    # create_counties_table()
+    create_annual_mining_table()
+    create_cumulative_mining_table()
+    create_highwall_centerlines_table()
+    create_counties_table()
     create_permits_table()
