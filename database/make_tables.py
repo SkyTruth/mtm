@@ -134,10 +134,10 @@ def create_permits_table():
             active_vio	INT,
             total_vio	INT,
             facility_n  TEXT,
-            acres_orig	INT,
-            acres_curr	INT,
-            acres_dist	INT,
-            acres_recl	INT,
+            acres_orig	DOUBLE PRECISION,
+            acres_curr	DOUBLE PRECISION,
+            acres_dist	DOUBLE PRECISION,
+            acres_recl	DOUBLE PRECISION,
             mstatus     TEXT,
             mdate	    DATE,
             issue_date	DATE,
@@ -177,8 +177,8 @@ def create_permits_table():
 
 
 if __name__ == "__main__":
-    create_annual_mining_table()
-    create_cumulative_mining_table()
-    create_highwall_centerlines_table()
-    create_counties_table()
+    # create_annual_mining_table()
+    # create_cumulative_mining_table()
+    # create_highwall_centerlines_table()
+    # create_counties_table()
     create_permits_table()
