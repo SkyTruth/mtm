@@ -1,4 +1,7 @@
 import datetime
+from geoalchemy2 import Geometry
+from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION, INTEGER, TEXT, FLOAT, DATE
+
 
 PROCESSING_YEAR = datetime.date.today().year
 # Uncomment line below to set the processing year, otherwise processing_year = current year
@@ -29,13 +32,83 @@ MASK_INTERIM = MASK_DIR + "interimMask/"
 MASK_FINAL = MASK_DIR + "finalMask/"
 
 # FIPS Codes for Counties in the Study Area
-FIPS_CODES = [21013, 21019, 21025, 21043, 21051, 21053, 21063, 21065, 21071, 21089, 21095,
-              21109, 21115, 21119, 21121, 21125, 21127, 21129, 21131, 21133, 21135, 21147,
-              21153, 21159, 21165, 21175, 21189, 21193, 21195, 21197, 21199, 21203, 21205,
-              21231, 21235, 21237, 47001, 47013, 47025, 47035, 47049, 47129, 47133, 47137,
-              47141, 47145, 47151, 51027, 51051, 51105, 51167, 51169, 51185, 51195, 51720,
-              54005, 54011, 54015, 54019, 54025, 54039, 54043, 54045, 54047, 54053, 54055,
-              54059, 54067, 54075, 54079, 54081, 54089, 54099, 54101, 54109]
+FIPS_CODES = [
+    21013,
+    21019,
+    21025,
+    21043,
+    21051,
+    21053,
+    21063,
+    21065,
+    21071,
+    21089,
+    21095,
+    21109,
+    21115,
+    21119,
+    21121,
+    21125,
+    21127,
+    21129,
+    21131,
+    21133,
+    21135,
+    21147,
+    21153,
+    21159,
+    21165,
+    21175,
+    21189,
+    21193,
+    21195,
+    21197,
+    21199,
+    21203,
+    21205,
+    21231,
+    21235,
+    21237,
+    47001,
+    47013,
+    47025,
+    47035,
+    47049,
+    47129,
+    47133,
+    47137,
+    47141,
+    47145,
+    47151,
+    51027,
+    51051,
+    51105,
+    51167,
+    51169,
+    51185,
+    51195,
+    51720,
+    54005,
+    54011,
+    54015,
+    54019,
+    54025,
+    54039,
+    54043,
+    54045,
+    54047,
+    54053,
+    54055,
+    54059,
+    54067,
+    54075,
+    54079,
+    54081,
+    54089,
+    54099,
+    54101,
+    54109,
+]
 
 
 # Set the Cloud Bucket for the Project
@@ -88,7 +161,85 @@ MIN_SPUR_LENGTH = 10
 MIN_BRANCH_LENGTH = 20
 TARGET_SEGMENT_LENGTH = 100
 MAX_SEGMENT_LENGTH = 150
-MIN_SEGMENT_LENGTH = 50 
+MIN_SEGMENT_LENGTH = 50
 
+# Define the dtype format dictionaries for appending dataframes to sql.
+annual_mining_format_dict = {
+    "id": TEXT(),
+    "mining_year": INTEGER(),
+    "area": DOUBLE_PRECISION(),
+    "data_status": TEXT(),
+    "geom": Geometry("MultiPolygon", srid=4326),
+}
+
+highwall_centerline_format_dict = {
+    "id": TEXT(),
+    "detect_length": FLOAT(),
+    "geom": Geometry("MultiLineString", srid=4326),
+}
+
+counties_format_dict = {
+    "statefp": INTEGER(),
+    "countyfp": INTEGER(),
+    "countyns": INTEGER(),
+    "geoid": INTEGER(),
+    "geoidfq": TEXT(),
+    "name": TEXT(),
+    "namelsad": TEXT(),
+    "lsad": INTEGER(),
+    "classfp": TEXT(),
+    "mtfcc": TEXT(),
+    "csafp": INTEGER(),
+    "cbsafp": INTEGER(),
+    "metdivfp": INTEGER(),
+    "funcstat": TEXT(),
+    "aland": DOUBLE_PRECISION(),
+    "awater": DOUBLE_PRECISION(),
+    "intptlat": DOUBLE_PRECISION(),
+    "intptlon": DOUBLE_PRECISION(),
+    "geom": Geometry("MultiPolygon", srid=4326),
+}
+
+wv_permit_format_dict = {
+    "permit_id": TEXT(),
+    "mapdate": DATE(),
+    "maptype": TEXT(),
+    "active_vio": INTEGER(),
+    "total_vio": INTEGER(),
+    "facility_n": TEXT(),
+    "acres_orig": DOUBLE_PRECISION(),
+    "acres_curr": DOUBLE_PRECISION(),
+    "acres_dist": DOUBLE_PRECISION(),
+    "acres_recl": DOUBLE_PRECISION(),
+    "mstatus": TEXT(),
+    "mdate": DATE(),
+    "issue_date": DATE(),
+    "expire_dat": DATE(),
+    "permittee": TEXT(),
+    "operator": TEXT(),
+    "last_updat": DATE(),
+    "comments": TEXT(),
+    "pstatus": TEXT(),
+    "ma_area": TEXT(),
+    "ma_contour": TEXT(),
+    "ma_mtntop": TEXT(),
+    "ma_steepsl": TEXT(),
+    "ma_auger": TEXT(),
+    "ma_roompil": TEXT(),
+    "ma_longwal": TEXT(),
+    "ma_refuse": TEXT(),
+    "ma_loadout": TEXT(),
+    "ma_preppla": TEXT(),
+    "ma_haulroa": TEXT(),
+    "ma_rockfil": TEXT(),
+    "ma_impound": TEXT(),
+    "ma_tipple": TEXT(),
+    "pmlu1": TEXT(),
+    "pmlu2": TEXT(),
+    "weblink1": TEXT(),
+    "st_area_sh": FLOAT(),
+    "st_length_": FLOAT(),
+    "geom": Geometry("MultiPolygon", srid=4326),
+}
 
 # TODO: add remaining variables
