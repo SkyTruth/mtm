@@ -1,20 +1,9 @@
 import json
 import geopandas as gpd
 import pandas as pd
-from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION, INTEGER, TEXT, FLOAT, DATE
-from geoalchemy2 import Geometry
 from google.cloud import storage
-from mtm_utils.cloud_sql_utils import connect_tcp_socket
-from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_FINAL_DATA_GEOJSON
-
-from shapely import to_wkb, from_wkb
-
-
-def to_2d(geom):
-    if geom is None:
-        return None
-    # force output_dimension=2
-    return from_wkb(to_wkb(geom, output_dimension=2))
+from mtm_utils.cloud_sql_utils import connect_tcp_socket, geom_convert_3d_to_2d
+from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_FINAL_DATA_GEOJSON, annual_mining_format_dict, highwall_centerline_format_dict, counties_format_dict, wv_permit_format_dict
 
 
 def append_to_annual_mining_table_from_local():
@@ -48,13 +37,7 @@ def append_to_annual_mining_table_from_local():
             index=False,          # avoid stray index column
             method="multi",
             chunksize=1000,
-            dtype={
-                "id": TEXT(),
-                "mining_year": INTEGER(),
-                "area": DOUBLE_PRECISION(),
-                "data_status": TEXT(),
-                "geom": Geometry("MultiPolygon", srid=4326)
-             },
+            dtype=annual_mining_format_dict,
         )
     print(f"Data from: {infile} apppended to {table_name}.")
 
@@ -104,13 +87,7 @@ def append_to_annual_mining_table_from_gcs():
             index=False,          # avoid stray index column
             method="multi",
             chunksize=1000,
-            dtype={
-                "id": TEXT(),
-                "mining_year": INTEGER(),
-                "area": DOUBLE_PRECISION(),
-                "data_status": TEXT(),
-                "geom": Geometry("MultiPolygon", srid=4326)
-             },
+            dtype=annual_mining_format_dict,
         )
     print(f"Data from: {file_path_name} apppended to {table_name}.")
 
@@ -143,11 +120,7 @@ def append_to_highwall_centerline_table_from_local():
             index=False,          # avoid stray index column
             method="multi",
             chunksize=1000,
-            dtype={
-                "id": TEXT(),
-                "detect_length": FLOAT(),
-                "geom": Geometry("MultiLineString", srid=4326)
-             },
+            dtype=highwall_centerline_format_dict,
         )
     print(f"Data from: {infile} apppended to {table_name}.")
 
@@ -201,27 +174,7 @@ def append_to_counties_table_from_local():
             index=False,          # avoid stray index column
             method="multi",
             chunksize=1000,
-            dtype={
-                "statefp": INTEGER(),
-                "countyfp": INTEGER(),
-                "countyns": INTEGER(),
-                "geoid": INTEGER(),
-                "geoidfq": TEXT(),
-                "name": TEXT(),
-                "namelsad": TEXT(),
-                "lsad": INTEGER(),
-                "classfp": TEXT(),
-                "mtfcc": TEXT(),
-                "csafp": INTEGER(),
-                "cbsafp": INTEGER(),
-                "metdivfp": INTEGER(),
-                "funcstat": TEXT(),
-                "aland": DOUBLE_PRECISION(),
-                "awater": DOUBLE_PRECISION(),
-                "intptlat": DOUBLE_PRECISION(),
-                "intptlon": DOUBLE_PRECISION(),
-                "geom": Geometry("MultiPolygon", srid=4326)
-             },
+            dtype=counties_format_dict,
         )
 
     print(f"Data from: {infile} apppended to {table_name}.")
@@ -239,14 +192,13 @@ def append_to_permits_table_from_local():
 
     gdf = gpd.read_file(infile)
     df = gdf
-    print(df.head(3))
+    # print(df.head(3))
 
-    df = df.rename(columns={
-        "geometry": "geom",
-    })
+    df = df.rename(columns={"geometry": "geom",})
     
-    df["geom"] = df["geom"].apply(to_2d)
-    print(df.head(3))
+    # Convert to 2D Geoms if needed
+    df["geom"] = df["geom"].apply(geom_convert_3d_to_2d)
+    # print(df.head(3))
 
     # Formate date columns, for reference, native formats for WV Permit data are:
     #       mapdate     = YYYYMMDD
@@ -271,55 +223,15 @@ def append_to_permits_table_from_local():
             index=False,          # avoid stray index column
             method="multi",
             chunksize=1000,
-            dtype={
-                "permit_id": TEXT(),
-                "mapdate": DATE(),
-                "maptype": TEXT(),
-                "active_vio": INTEGER(),
-                "total_vio": INTEGER(),
-                "facility_n": TEXT(),
-                "acres_orig": DOUBLE_PRECISION(),
-                "acres_curr": DOUBLE_PRECISION(),
-                "acres_dist": DOUBLE_PRECISION(),
-                "acres_recl": DOUBLE_PRECISION(),
-                "mstatus": TEXT(),
-                "mdate": DATE(),
-                "issue_date": DATE(),
-                "expire_dat": DATE(),
-                "permittee": TEXT(),
-                "operator": TEXT(),
-                "last_updat": DATE(),
-                "comments": TEXT(),
-                "pstatus": TEXT(),
-                "ma_area": TEXT(),
-                "ma_contour": TEXT(),
-                "ma_mtntop": TEXT(),
-                "ma_steepsl": TEXT(),
-                "ma_auger": TEXT(),
-                "ma_roompil": TEXT(),
-                "ma_longwal": TEXT(),
-                "ma_refuse": TEXT(),
-                "ma_loadout": TEXT(),
-                "ma_preppla": TEXT(),
-                "ma_haulroa": TEXT(),
-                "ma_rockfil": TEXT(),
-                "ma_impound": TEXT(),
-                "ma_tipple": TEXT(),
-                "pmlu1": TEXT(),
-                "pmlu2": TEXT(),
-                "weblink1": TEXT(),
-                "st_area_sh": FLOAT(),
-                "st_length_": FLOAT(),
-                "geom": Geometry("MultiPolygon", srid=4326)
-             },
+            dtype= wv_permit_format_dict,
         )
 
     print(f"Data from: {infile} apppended to {table_name}.")
 
-if __name__ == "__main__":
-    append_to_annual_mining_table_from_local()
-    append_to_annual_mining_table_from_gcs()
-    append_to_highwall_centerline_table_from_local()
-    append_to_counties_table_from_local()
-    append_to_permits_table_from_local()
 
+if __name__ == "__main__":
+    # append_to_annual_mining_table_from_local()
+    # append_to_annual_mining_table_from_gcs()
+    # append_to_highwall_centerline_table_from_local()
+    # append_to_counties_table_from_local()
+    append_to_permits_table_from_local()
