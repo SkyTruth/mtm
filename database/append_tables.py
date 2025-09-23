@@ -143,9 +143,86 @@ def append_to_highwall_centerline_table_from_local():
     print(f"Data from: {infile} apppended to {table_name}.")
 
 
+def append_to_counties_table_from_local():
+    engine = connect_tcp_socket()
+
+    infile = "~/Desktop/MTM_API_SANDBOX/tl_2024_us_county_WV_SAMPLE.geojson"
+    
+    # Options for d_status are: "final" for fully cleaned products or "provisional" for
+    # partially cleaned products. This is written into the data_status column of the table
+    # during upload.
+    table_name = "counties"
+
+    gdf = gpd.read_file(infile)
+    df = gdf
+    print(df.head(3))
+
+    df = df.rename(columns={
+        "STATEFP": "statefp",
+        "COUNTYFP": "countyfp",
+        "COUNTYNS": "countyns",
+        "GEOID": "geoid",
+        "GEOIDFQ": "geoidfq",
+        "NAME": "name",
+        "NAMELSAD": "namelsad",
+        "LSAD": "lsad",
+        "CLASSFP": "classfp",
+        "MTFCC": "mtfcc",
+        "CSAFP": "csafp",
+        "CBSAFP": "cbsafp",
+        "METDIVFP": "metdivfp",
+        "FUNCSTAT": "funcstat",
+        "ALAND": "aland",
+        "AWATER": "awater",
+        "INTPTLAT": "intptlat",
+        "INTPTLON": "intptlon",
+        "geometry": "geom",
+    })
+    
+    # Clean lat/lon (remove '+' and cast to float)
+    for col in ("intptlat", "intptlon"):
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col].astype(str).str.replace("+", "", regex=False), errors="coerce")
+
+    with engine.begin() as conn:
+        df.to_sql(
+            table_name,
+            con=conn,
+            if_exists="append",
+            index=False,          # avoid stray index column
+            method="multi",
+            chunksize=1000,
+            dtype={
+                "statefp": INTEGER(),
+                "countyfp": INTEGER(),
+                "countyns": INTEGER(),
+                "geoid": INTEGER(),
+                "geoidfq": TEXT(),
+                "name": TEXT(),
+                "namelsad": TEXT(),
+                "lsad": INTEGER(),
+                "classfp": TEXT(),
+                "mtfcc": TEXT(),
+                "csafp": INTEGER(),
+                "cbsafp": INTEGER(),
+                "metdivfp": INTEGER(),
+                "funcstat": TEXT(),
+                "aland": DOUBLE_PRECISION(),
+                "awater": DOUBLE_PRECISION(),
+                "intptlat": DOUBLE_PRECISION(),
+                "intptlon": DOUBLE_PRECISION(),
+                "geom": Geometry("MultiPolygon", srid=4326)
+             },
+        )
+
+    print(f"Data from: {infile} apppended to {table_name}.")
+
+
+
 
 if __name__ == "__main__":
-    # append_to_annual_mining_table_from_local()
-    # append_to_annual_mining_table_from_gcs()
+    append_to_annual_mining_table_from_local()
+    append_to_annual_mining_table_from_gcs()
     append_to_highwall_centerline_table_from_local()
+    append_to_counties_table_from_local()
 
