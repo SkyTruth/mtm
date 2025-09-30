@@ -184,6 +184,7 @@ def append_to_permits_table_from_local():
     engine = connect_tcp_socket()
 
     infile = "~/Desktop/MTM_API_SANDBOX/WVDEP_GIS_data_mining_reclamation_permit_boundary_SAMPLE.geojson"
+    state = "wv"
     
     # Options for d_status are: "final" for fully cleaned products or "provisional" for
     # partially cleaned products. This is written into the data_status column of the table
@@ -192,10 +193,17 @@ def append_to_permits_table_from_local():
 
     gdf = gpd.read_file(infile)
     df = gdf
-    # print(df.head(3))
-
     df = df.rename(columns={"geometry": "geom",})
     
+    # Add a new, SkyTruth ID, which is unique to each record, handles issues where there are multiple records
+    # that share a permit_id. Set the state on line 187.
+    df = df.reset_index(drop=True)
+    df["st_id"] = [f"st_{state}_" + str(i) for i in range(1, len(df) + 1)]
+    
+    # Reorder so unique_id is the first column
+    cols = ["st_id"] + [c for c in df.columns if c != "st_id"]
+    df = df[cols]
+
     # Convert to 2D Geoms if needed
     df["geom"] = df["geom"].apply(geom_convert_3d_to_2d)
     # print(df.head(3))
@@ -213,7 +221,7 @@ def append_to_permits_table_from_local():
     for col in ["mdate", "issue_date", "expire_dat", "last_updat"]:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col], format="%m/%d/%y", errors="coerce")
-    # print(df[["mapdate","mdate", "issue_date", "expire_dat", "last_updat"]].head(3))
+    # print(df[["mapdate","mdate", "issue_date", "expire_dat", "last_updat"]].head(3)) 
 
     with engine.begin() as conn:
         df.to_sql(
