@@ -128,7 +128,7 @@ def create_permits_table():
     # SQL statement for creating table
     create_stmt = f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
-            permit_id   TEXT,
+            permit_id   TEXT PRIMARY KEY,
             mapdate	    DATE,
             maptype     TEXT,
             active_vio	INT,
