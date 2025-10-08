@@ -2,7 +2,6 @@ import requests
 import pandas as pd
 import geopandas as gpd
 import numpy as np
-import urllib.parse
 from shapely.geometry import shape
 
 def testing_access():
