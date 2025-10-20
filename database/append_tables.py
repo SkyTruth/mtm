@@ -3,7 +3,7 @@ import geopandas as gpd
 import pandas as pd
 from google.cloud import storage
 from mtm_utils.cloud_sql_utils import connect_tcp_socket, geom_convert_3d_to_2d
-from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_FINAL_DATA_GEOJSON, annual_mining_format_dict, highwall_centerline_format_dict, counties_format_dict, wv_permit_format_dict
+from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_FINAL_DATA_GEOJSON, annual_mining_format_dict, highwall_centerline_format_dict, counties_format_dict, wv_permit_format_dict, huc_format_dict
 
 
 def append_to_annual_mining_table_from_local():
@@ -237,9 +237,67 @@ def append_to_permits_table_from_local():
     print(f"Data from: {infile} apppended to {table_name}.")
 
 
+def append_to_huc_table_from_local():
+    engine = connect_tcp_socket()
+
+    infile = "~/Desktop/MTM_API_SANDBOX/NHD_HUC/NHD_HUC_2_to_12_sample.geojson"
+    
+    table_name = "huc_boundaries"
+
+    gdf = gpd.read_file(infile)
+    df = gdf
+    print(df.head(3))
+
+    df = df.rename(columns={
+        "objectid": "objectid",
+        "tnmid": "tnmid",
+        "metasourceid": "metasourceid",
+        "sourcedatadesc": "sourcedatadesc",
+        "sourceoriginator": "sourceoriginator",
+        "sourcefeatureid": "sourcefeatureid",
+        "loaddate": "loaddate",
+        "referencegnis_ids": "referencegnis_ids",
+        "areaacres": "areaacres",
+        "areasqkm": "areasqkm",
+        "states": "states",
+        "huc10": "huc10",
+        "name": "name",
+        "hutype": "hutype",
+        "humod": "humod",
+        "globalid": "globalid",
+        "shape_Length": "shape_length",
+        "shape_Area": "shape_area",
+        "hutype_description": "hutype_description",
+        "huc12": "huc12",
+        "tohuc": "tohuc",
+        "noncontributingareaacres": "noncontributingareaacres",
+        "noncontributingareasqkm": "noncontributingareasqkm",
+        "huc2": "huc2",
+        "huc4": "huc4",
+        "huc6": "huc6",
+        "huc8": "huc8",
+        "geometry": "geom",
+    })
+
+
+    with engine.begin() as conn:
+        df.to_sql(
+            table_name,
+            con=conn,
+            if_exists="append",
+            index=False,          # avoid stray index column
+            method="multi",
+            chunksize=1000,
+            dtype= wv_permit_format_dict,
+        )
+
+    print(f"Data from: {infile} apppended to {table_name}.")
+
+
 if __name__ == "__main__":
     append_to_annual_mining_table_from_local()
     append_to_annual_mining_table_from_gcs()
     append_to_highwall_centerline_table_from_local()
     append_to_counties_table_from_local()
     append_to_permits_table_from_local()
+    append_to_huc_table_from_local()
