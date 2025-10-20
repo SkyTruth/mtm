@@ -184,7 +184,7 @@ def create_huc_table():
     # SQL statement for creating table
     create_stmt = f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
-            objectid                    INT,
+            objectid                    INT PRIMARY KEY,
             tmnid                       TEXT,
             metasourceid                TEXT,
             sourcedatadesc              TEXT,
