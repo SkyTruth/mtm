@@ -248,7 +248,7 @@ wv_permit_format_dict = {
 
 huc_format_dict = {
     "objectid": INTEGER(),
-    "tmnid": TEXT(),
+    "tnmid": TEXT(),
     "metasourceid": TEXT(),
     "sourcedatadesc": TEXT(),
     "sourceoriginator": TEXT(),
