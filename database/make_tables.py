@@ -220,6 +220,7 @@ def create_huc_table():
         conn.commit()
         print(f"Successfully created table: {table_name}.")
 
+
 if __name__ == "__main__":
     create_annual_mining_table()
     create_cumulative_mining_table()
