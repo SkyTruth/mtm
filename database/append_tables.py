@@ -180,7 +180,7 @@ def append_to_counties_table_from_local():
     print(f"Data from: {infile} apppended to {table_name}.")
 
 
-def append_to_permits_table_from_local():
+def append_to_wv_permits_table_from_local():
     engine = connect_tcp_socket()
 
     infile = "~/Desktop/MTM_API_SANDBOX/WVDEP_GIS_data_mining_reclamation_permit_boundary_SAMPLE.geojson"
@@ -189,7 +189,7 @@ def append_to_permits_table_from_local():
     # Options for d_status are: "final" for fully cleaned products or "provisional" for
     # partially cleaned products. This is written into the data_status column of the table
     # during upload.
-    table_name = "state_permits"
+    table_name = "state_permits_"+state
 
     gdf = gpd.read_file(infile)
     df = gdf
@@ -299,5 +299,5 @@ if __name__ == "__main__":
     append_to_annual_mining_table_from_gcs()
     append_to_highwall_centerline_table_from_local()
     append_to_counties_table_from_local()
-    append_to_permits_table_from_local()
+    append_to_wv_permits_table_from_local()
     append_to_huc_table_from_local()
