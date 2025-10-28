@@ -121,9 +121,9 @@ def create_counties_table():
         print(f"Successfully created table: {table_name}.")
 
 
-def create_permits_table():
+def create_wv_permits_table():
     engine = connect_tcp_socket()
-    table_name = "state_permits"
+    table_name = "state_permits_wv"
 
     # SQL statement for creating table
     create_stmt = f"""
