@@ -279,7 +279,7 @@ def create_eamlis_table():
             TOTAL_COST      TEXT,
             x               DOUBLE PRECISION,
             y               DOUBLE PRECISION,
-            geom            geometry(MultiPolygon, 4326)
+            geom            geometry(Point, 4326)
         );
     """
 
