@@ -3,7 +3,7 @@ import geopandas as gpd
 import pandas as pd
 from google.cloud import storage
 from mtm_utils.cloud_sql_utils import connect_tcp_socket, geom_convert_3d_to_2d
-from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_FINAL_DATA_GEOJSON, annual_mining_format_dict, highwall_centerline_format_dict, counties_format_dict, wv_permit_format_dict, huc_format_dict
+from mtm_utils.variables import GCLOUD_BUCKET, GCLOUD_FINAL_DATA_GEOJSON, annual_mining_format_dict, highwall_centerline_format_dict, counties_format_dict, wv_permit_format_dict, huc_format_dict, eamlis_format_dict
 
 
 def append_to_annual_mining_table_from_local():
@@ -288,7 +288,90 @@ def append_to_huc_table_from_local():
             index=False,          # avoid stray index column
             method="multi",
             chunksize=1000,
-            dtype= wv_permit_format_dict,
+            dtype= huc_format_dict,
+        )
+
+    print(f"Data from: {infile} apppended to {table_name}.")
+
+
+def append_to_eamlis_table_from_local():
+    engine = connect_tcp_socket()
+
+    infile = "~/Desktop/MTM_API_SANDBOX/eAMLIS_data_accessed_2025-10-24_4326_SAMPLE.geojson"
+    
+    table_name = "eamlis"
+
+    gdf = gpd.read_file(infile)
+    df = gdf
+    print(df.head(3))
+    # print(df.dtypes)
+
+
+    df = df.rename(columns={
+        "OBJECTID": "objectid",
+        "AMLIS_KEY": "amlis_key",
+        "STATE_KEY": "state_key",
+        "PA_NUMBER": "pa_number",
+        "PA_NAME": "pa_name",
+        "PU_NUMBER": "pu_number",
+        "PU_NAME": "pu_name",
+        "EST_LATITU": "est_latitu",
+        "EST_LONGIT": "est_longit",
+        "LAT_DEG": "lat_deg",
+        "LAT_MIN": "lat_min",
+        "LON_DEG": "lon_deg",
+        "LON_MIN": "lon_min",
+        "COUNTY": "county",
+        "FIPS_CODE": "fips_code",
+        "CONG_DIST": "cong_dist",
+        "QUAD_NAME": "quad_name",
+        "HUC_CODE": "huc_code",
+        "WATERSHED": "watershed",
+        "MINE_TYPE": "mine_type",
+        "ORE_TYPES": "ore_types",
+        "OWNER_PRIV": "owner_priv",
+        "OWNER_STAT": "owner_stat",
+        "OWNER_INDI": "owner_indi",
+        "OWNER_BLM": "owner_blm",
+        "OWNER_FORE": "owner_fore",
+        "OWNER_NATI": "owner_nati",
+        "OWNER_OTHE": "owner_othe",
+        "POPULATION": "population",
+        "DATE_PREPA": "date_prepa",
+        "DATE_REVIS": "date_revis",
+        "PRIORITY": "priority",
+        "PROB_TY_CD": "prob_ty_cd",
+        "PROB_TY_NA": "prob_ty_na",
+        "PROGRAM": "program",
+        "UNFD_UNITS": "unfd_units",
+        "UNFD_METER": "unfd_meter",
+        "UNFD_COST": "unfd_cost",
+        "UNFD_GPRA": "unfd_gpra",
+        "FUND_UNITS": "fund_units",
+        "FUND_METER": "fund_meter",
+        "FUND_COST": "fund_cost",
+        "FUND_GPRA": "fund_gpra",
+        "COMP_UNITS": "comp_units",
+        "COMP_METER": "comp_meter",
+        "COMP_COST": "comp_cost",
+        "COMP_GPRA": "comp_gpra",
+        "TOTAL_UNIT": "total_unit",
+        "TOTAL_COST": "total_cost",
+        "x": "x",
+        "y": "y",
+        "geometry": "geom",
+    })
+
+
+    with engine.begin() as conn:
+        df.to_sql(
+            table_name,
+            con=conn,
+            if_exists="append",
+            index=False,          # avoid stray index column
+            method="multi",
+            chunksize=1000,
+            dtype= eamlis_format_dict,
         )
 
     print(f"Data from: {infile} apppended to {table_name}.")
@@ -301,3 +384,4 @@ if __name__ == "__main__":
     append_to_counties_table_from_local()
     append_to_wv_permits_table_from_local()
     append_to_huc_table_from_local()
+    append_to_eamlis_table_from_local()
