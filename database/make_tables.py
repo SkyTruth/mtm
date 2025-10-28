@@ -221,10 +221,79 @@ def create_huc_table():
         print(f"Successfully created table: {table_name}.")
 
 
+def create_eamlis_table():
+    engine = connect_tcp_socket()
+    table_name = "eamlis"
+
+    # SQL statement for creating table
+    create_stmt = f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            OBJECTID        INT PRIMARY KEY,
+            AMLIS_KEY       TEXT,
+            STATE_KEY       TEXT,
+            PA_NUMBER       TEXT,
+            PA_NAME         TEXT,
+            PU_NUMBER       TEXT,
+            PU_NAME         TEXT,
+            EST_LATITU      DOUBLE PRECISION,
+            EST_LONGIT      DOUBLE PRECISION,
+            LAT_DEG         INT,
+            LAT_MIN         INT,
+            LON_DEG         INT,
+            LON_MIN         INT,
+            COUNTY          TEXT,
+            FIPS_CODE       TEXT,
+            CONG_DIST       INT,
+            QUAD_NAME       TEXT,
+            HUC_CODE        INT,
+            WATERSHED       TEXT,
+            MINE_TYPE       TEXT,
+            ORE_TYPES       TEXT,
+            OWNER_PRIV      DOUBLE PRECISION,
+            OWNER_STAT      DOUBLE PRECISION,
+            OWNER_INDI      DOUBLE PRECISION,
+            OWNER_BLM       DOUBLE PRECISION,
+            OWNER_FORE      DOUBLE PRECISION,
+            OWNER_NATI      DOUBLE PRECISION,
+            OWNER_OTHE      DOUBLE PRECISION,
+            POPULATION      TEXT,
+            DATE_PREPA      TEXT,
+            DATE_REVIS      TEXT,
+            PRIORITY        TEXT,
+            PROB_TY_CD      TEXT,
+            PROB_TY_NA      TEXT,
+            PROGRAM         TEXT,
+            UNFD_UNITS      TEXT,
+            UNFD_METER      TEXT,
+            UNFD_COST       TEXT,
+            UNFD_GPRA       TEXT,
+            FUND_UNITS      TEXT,
+            FUND_METER      TEXT,
+            FUND_COST       TEXT,
+            FUND_GPRA       TEXT,
+            COMP_UNITS      TEXT,
+            COMP_METER      TEXT,
+            COMP_COST       TEXT,
+            COMP_GPRA       TEXT,
+            TOTAL_UNIT      TEXT,
+            TOTAL_COST      TEXT,
+            x               DOUBLE PRECISION,
+            y               DOUBLE PRECISION,
+            geom            geometry(MultiPolygon, 4326)
+        );
+    """
+
+    with engine.connect() as conn:
+        conn.execute(sqlalchemy.text(create_stmt))
+        conn.commit()
+        print(f"Successfully created table: {table_name}.")
+
+
 if __name__ == "__main__":
-    create_annual_mining_table()
-    create_cumulative_mining_table()
-    create_highwall_centerlines_table()
-    create_counties_table()
-    create_wv_permits_table()
-    create_huc_table()
+    # create_annual_mining_table()
+    # create_cumulative_mining_table()
+    # create_highwall_centerlines_table()
+    # create_counties_table()
+    # create_wv_permits_table()
+    # create_huc_table()
+    create_eamlis_table()
