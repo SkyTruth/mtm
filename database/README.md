@@ -22,3 +22,6 @@ This code is currently only able to write data from local files, or a GCS file p
 ```shell
 poetry run python database/append_tables.py
 ```
+
+# API Guide
+This colab notebook: [MTM Test API Guide v2.ipynb](https://colab.research.google.com/drive/1eWf8Fsr_-NgXM_YyI-WSHIWejfhToXDp#scrollTo=381wUU-Na6WM) provides examples of how to interact with the API.
