@@ -274,7 +274,7 @@ huc_format_dict = {
     "huc4": TEXT(),
     "huc6": TEXT(),
     "huc8": TEXT(),
-    "geom": Geometry("MultiPolygon", srid=4326),
+    "geom": Geometry("Point", srid=4326),
 }
 
 eamlis_format_dict = {
