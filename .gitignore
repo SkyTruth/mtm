@@ -6,6 +6,7 @@ data/maskData/finalMask/*
 data/USCB_Data/
 data/tmp/
 config.py
+mask_log.txt
 ToDo.txt
 data/highwalls/temps/*
 data/highwalls/outputs/*
