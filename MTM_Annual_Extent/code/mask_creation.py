@@ -233,7 +233,7 @@ def mask_creation():
 
 def mask_rasterization_pt1():
     print("\n\nBEGINNING MASK RASTERIZATION PROCESS\n\n")
-    infile = f"{PROCESSING_YEAR}_USCB_data_buffered_merged_3857.shp"
+    infile = f"{PROCESSING_YEAR}_USCB_data_buffered_merged_3857.geojson"
     outfile = f"{PROCESSING_YEAR}_Input-Mask_interim_3857.tiff"
 
     if os.path.isfile(MASK_INTERIM + outfile):
