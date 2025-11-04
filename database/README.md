@@ -4,7 +4,7 @@ All code should be run from the `mtm/` directory
 # Getting Started
 1. Run the following code to connect to the cloud-sql-proxy
 ```shell
-./cloud-sql-proxy --port NNNN --address NNN.N.N.N skytruth-tech:us-central1:mining-sb &
+./cloud-sql-proxy --port NNNN --address NNN.N.N.N skytruth-tech:us-central1:DATABASE_NAME &
 ```
 2. Check the connection
 ```shell
