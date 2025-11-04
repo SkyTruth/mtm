@@ -11,6 +11,12 @@ All code should be run from the `mtm/` directory
 jobs
 ```
 
+# Prepare the database
+This will ensure the postgis extension is enabled
+```shell
+poetry run python database/prepare_db.py
+```
+
 # Creating Tables
 This will create all tables, if they do not already exist.
 ```shell
