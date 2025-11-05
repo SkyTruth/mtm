@@ -235,51 +235,52 @@ def create_eamlis_table():
             PA_NAME         TEXT,
             PU_NUMBER       TEXT,
             PU_NAME         TEXT,
-            EST_LATITU      DOUBLE PRECISION,
-            EST_LONGIT      DOUBLE PRECISION,
+            EST_LATITUDE    DOUBLE PRECISION,
+            EST_LONGITUDE   DOUBLE PRECISION,
             LAT_DEG         INT,
             LAT_MIN         INT,
             LON_DEG         INT,
             LON_MIN         INT,
             COUNTY          TEXT,
             FIPS_CODE       TEXT,
-            CONG_DIST       INT,
+            CONG_DIST       DOUBLE PRECISION,
             QUAD_NAME       TEXT,
-            HUC_CODE        INT,
+            HUC_CODE        DOUBLE PRECISION,
             WATERSHED       TEXT,
             MINE_TYPE       TEXT,
             ORE_TYPES       TEXT,
-            OWNER_PRIV      DOUBLE PRECISION,
-            OWNER_STAT      DOUBLE PRECISION,
-            OWNER_INDI      DOUBLE PRECISION,
+            OWNER_PRIVATE   DOUBLE PRECISION,
+            OWNER_STATE     DOUBLE PRECISION,
+            OWNER_INDIAN    DOUBLE PRECISION,
             OWNER_BLM       DOUBLE PRECISION,
-            OWNER_FORE      DOUBLE PRECISION,
-            OWNER_NATI      DOUBLE PRECISION,
-            OWNER_OTHE      DOUBLE PRECISION,
+            OWNER_FOREST    DOUBLE PRECISION,
+            OWNER_NATIONAL  DOUBLE PRECISION,
+            OWNER_OTHER     DOUBLE PRECISION,
             POPULATION      TEXT,
-            DATE_PREPA      DATE,
-            DATE_REVIS      DATE,
+            DATE_PREPARED   DATE,
+            DATE_REVISED    DATE,
             PRIORITY        TEXT,
             PROB_TY_CD      TEXT,
-            PROB_TY_NA      TEXT,
+            PROB_TY_NAME    TEXT,
             PROGRAM         TEXT,
             UNFD_UNITS      TEXT,
-            UNFD_METER      TEXT,
+            UNFD_METERS     TEXT,
             UNFD_COST       TEXT,
             UNFD_GPRA       TEXT,
             FUND_UNITS      TEXT,
-            FUND_METER      TEXT,
+            FUND_METERS     TEXT,
             FUND_COST       TEXT,
             FUND_GPRA       TEXT,
             COMP_UNITS      TEXT,
-            COMP_METER      TEXT,
+            COMP_METERS     TEXT,
             COMP_COST       TEXT,
             COMP_GPRA       TEXT,
-            TOTAL_UNIT      TEXT,
+            TOTAL_UNITS     TEXT,
             TOTAL_COST      TEXT,
             x               DOUBLE PRECISION,
             y               DOUBLE PRECISION,
-            geom            geometry(Point, 4326)
+            geom            geometry(Point, 4326),
+            access_date     TEXT
         );
     """
 
@@ -291,9 +292,9 @@ def create_eamlis_table():
 
 if __name__ == "__main__":
     create_annual_mining_table()
-    create_cumulative_mining_table()
-    create_highwall_centerlines_table()
-    create_counties_table()
-    create_wv_permits_table()
-    create_huc_table()
+    # create_cumulative_mining_table()
+    # create_highwall_centerlines_table()
+    # create_counties_table()
+    # create_wv_permits_table()
+    # create_huc_table()
     create_eamlis_table()
