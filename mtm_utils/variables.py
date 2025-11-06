@@ -179,9 +179,9 @@ annual_mining_format_dict = {
 }
 
 highwall_centerline_format_dict = {
-    "id": TEXT(),
-    "detect_length": FLOAT(),
-    "geom": Geometry("MultiLineString", srid=4326),
+    # "id": TEXT(),
+    # "detect_length": FLOAT(),
+    # "geom": Geometry("MultiLineString", srid=4326),
 }
 
 counties_format_dict = {
