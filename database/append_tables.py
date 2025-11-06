@@ -163,7 +163,7 @@ def append_to_highwall_centerline_table_from_local():
     # Options for d_status are: "final" for fully cleaned products or "provisional" for
     # partially cleaned products. This is written into the data_status column of the table
     # during upload.
-    table_name = "highwall_centerlines"
+    table_name = "highwall_detections"
 
     gdf = gpd.read_file(infile)
     df = gdf
@@ -193,7 +193,7 @@ def append_to_highwall_centerline_table_from_local():
 def append_to_counties_table_from_local():
     engine = connect_tcp_socket()
 
-    infile = "~/Desktop/MTM_API_SANDBOX/tl_2024_us_county_WV_SAMPLE.geojson"
+    infile = "~/Desktop/tl_2025_us_county/tl_2025_us_county_central_appalachia.geojson"
 
     # Options for d_status are: "final" for fully cleaned products or "provisional" for
     # partially cleaned products. This is written into the data_status column of the table
@@ -201,8 +201,7 @@ def append_to_counties_table_from_local():
     table_name = "counties"
 
     gdf = gpd.read_file(infile)
-    df = gdf
-    print(df.head(3))
+    df = gdf.assign(access_date="2025-11-06")
 
     df = df.rename(
         columns={
@@ -225,6 +224,7 @@ def append_to_counties_table_from_local():
             "INTPTLAT": "intptlat",
             "INTPTLON": "intptlon",
             "geometry": "geom",
+            "access_date": "access_date"
         }
     )
 
@@ -249,6 +249,154 @@ def append_to_counties_table_from_local():
     print(f"Data from: {infile} apppended to {table_name}.")
 
 
+def append_to_huc_table_from_local():
+    engine = connect_tcp_socket()
+
+    infile = "~/Desktop/WBD_National_GPKG/WBD_HUC_2_to_12_central_appalachia.geojson"
+
+    table_name = "huc_boundaries"
+
+    gdf = gpd.read_file(infile)
+    gdf.insert(0, "st_id", gdf["objectid"].astype(str) + "_" + (gdf.index + 1).astype(str))
+
+    df = gdf.assign(access_date="2025-11-06")
+
+    df = df.rename(
+        columns={
+            "st_id": "st_id",
+            "objectid": "objectid",
+            "tnmid": "tnmid",
+            "metasourceid": "metasourceid",
+            "sourcedatadesc": "sourcedatadesc",
+            "sourceoriginator": "sourceoriginator",
+            "sourcefeatureid": "sourcefeatureid",
+            "loaddate": "loaddate",
+            "referencegnis_ids": "referencegnis_ids",
+            "areaacres": "areaacres",
+            "areasqkm": "areasqkm",
+            "states": "states",
+            "huc10": "huc10",
+            "name": "name",
+            "hutype": "hutype",
+            "humod": "humod",
+            "globalid": "globalid",
+            "shape_Length": "shape_length",
+            "shape_Area": "shape_area",
+            "hutype_description": "hutype_description",
+            "huc12": "huc12",
+            "tohuc": "tohuc",
+            "noncontributingareaacres": "noncontributingareaacres",
+            "noncontributingareasqkm": "noncontributingareasqkm",
+            "huc2": "huc2",
+            "huc4": "huc4",
+            "huc6": "huc6",
+            "huc8": "huc8",
+            "geometry": "geom",
+            "access_date": "access_date",
+        }
+    )
+
+    print(df.head(3))
+    print(df.dtypes)
+
+    with engine.begin() as conn:
+        df.to_sql(
+            table_name,
+            con=conn,
+            if_exists="append",
+            index=False,  # avoid stray index column
+            method="multi",
+            chunksize=1000,
+            dtype=huc_format_dict,
+        )
+
+    print(f"Data from: {infile} apppended to {table_name}.")
+
+
+def append_to_eamlis_table_from_local():
+    engine = connect_tcp_socket()
+
+    infile = ("~/Desktop/eAMLIS/eAMLIS_data_accessed_2025-10-24_4326.geojson")
+
+    table_name = "eamlis"
+
+    gdf = gpd.read_file(infile)
+    df = gdf.assign(access_date="2025-10-24")
+
+    df = df.rename(
+        columns={
+            "OBJECTID": "objectid",
+            "AMLIS_KEY": "amlis_key",
+            "STATE_KEY": "state_key",
+            "PA_NUMBER": "pa_number",
+            "PA_NAME": "pa_name",
+            "PU_NUMBER": "pu_number",
+            "PU_NAME": "pu_name",
+            "EST_LATITUDE": "est_latitude",
+            "EST_LONGITUDE": "est_longitude",
+            "LAT_DEG": "lat_deg",
+            "LAT_MIN": "lat_min",
+            "LON_DEG": "lon_deg",
+            "LON_MIN": "lon_min",
+            "COUNTY": "county",
+            "FIPS_CODE": "fips_code",
+            "CONG_DIST": "cong_dist",
+            "QUAD_NAME": "quad_name",
+            "HUC_CODE": "huc_code",
+            "WATERSHED": "watershed",
+            "MINE_TYPE": "mine_type",
+            "ORE_TYPES": "ore_types",
+            "OWNER_PRIVATE": "owner_private",
+            "OWNER_STATE": "owner_state",
+            "OWNER_INDIAN": "owner_indian",
+            "OWNER_BLM": "owner_blm",
+            "OWNER_FOREST": "owner_forest",
+            "OWNER_NATIONAL": "owner_national",
+            "OWNER_OTHER": "owner_other",
+            "POPULATION": "population",
+            "DATE_PREPARED": "date_prepared",
+            "DATE_REVISED": "date_revised",
+            "PRIORITY": "priority",
+            "PROB_TY_CD": "prob_ty_cd",
+            "PROB_TY_NAME": "prob_ty_name",
+            "PROGRAM": "program",
+            "UNFD_UNITS": "unfd_units",
+            "UNFD_METERS": "unfd_meters",
+            "UNFD_COST": "unfd_cost",
+            "UNFD_GPRA": "unfd_gpra",
+            "FUND_UNITS": "fund_units",
+            "FUND_METERS": "fund_meters",
+            "FUND_COST": "fund_cost",
+            "FUND_GPRA": "fund_gpra",
+            "COMP_UNITS": "comp_units",
+            "COMP_METERS": "comp_meters",
+            "COMP_COST": "comp_cost",
+            "COMP_GPRA": "comp_gpra",
+            "TOTAL_UNITS": "total_units",
+            "TOTAL_COST": "total_cost",
+            "x": "x",
+            "y": "y",
+            "geometry": "geom",
+            "access_date": "access_date"
+        }
+    )
+
+
+    with engine.begin() as conn:
+        df.to_sql(
+            table_name,
+            con=conn,
+            if_exists="append",
+            index=False,  # avoid stray index column
+            method="multi",
+            chunksize=1000,
+            dtype=eamlis_format_dict,
+        )
+
+    print(f"Data from: {infile} apppended to {table_name}.")
+
+
+"""
 def append_to_wv_permits_table_from_local():
     engine = connect_tcp_socket()
 
@@ -310,156 +458,15 @@ def append_to_wv_permits_table_from_local():
     print(f"Data from: {infile} apppended to {table_name}.")
 
 
-def append_to_huc_table_from_local():
-    engine = connect_tcp_socket()
+"""
 
-    infile = "~/Desktop/MTM_API_SANDBOX/NHD_HUC/NHD_HUC_2_to_12_sample.geojson"
-
-    table_name = "huc_boundaries"
-
-    gdf = gpd.read_file(infile)
-    df = gdf
-    print(df.head(3))
-
-    df = df.rename(
-        columns={
-            "objectid": "objectid",
-            "tnmid": "tnmid",
-            "metasourceid": "metasourceid",
-            "sourcedatadesc": "sourcedatadesc",
-            "sourceoriginator": "sourceoriginator",
-            "sourcefeatureid": "sourcefeatureid",
-            "loaddate": "loaddate",
-            "referencegnis_ids": "referencegnis_ids",
-            "areaacres": "areaacres",
-            "areasqkm": "areasqkm",
-            "states": "states",
-            "huc10": "huc10",
-            "name": "name",
-            "hutype": "hutype",
-            "humod": "humod",
-            "globalid": "globalid",
-            "shape_Length": "shape_length",
-            "shape_Area": "shape_area",
-            "hutype_description": "hutype_description",
-            "huc12": "huc12",
-            "tohuc": "tohuc",
-            "noncontributingareaacres": "noncontributingareaacres",
-            "noncontributingareasqkm": "noncontributingareasqkm",
-            "huc2": "huc2",
-            "huc4": "huc4",
-            "huc6": "huc6",
-            "huc8": "huc8",
-            "geometry": "geom",
-        }
-    )
-
-    with engine.begin() as conn:
-        df.to_sql(
-            table_name,
-            con=conn,
-            if_exists="append",
-            index=False,  # avoid stray index column
-            method="multi",
-            chunksize=1000,
-            dtype=huc_format_dict,
-        )
-
-    print(f"Data from: {infile} apppended to {table_name}.")
-
-
-def append_to_eamlis_table_from_local():
-    engine = connect_tcp_socket()
-
-    infile = ("~/Desktop/eAMLIS/eAMLIS_data_accessed_2025-10-24_4326.geojson")
-
-    table_name = "eamlis"
-
-    gdf = gpd.read_file(infile)
-    df = gdf.assign(access_date="2025-10-24")
-    # print(df.head(3))
-    print(df.dtypes)
-
-    df = df.rename(
-        columns={
-            "OBJECTID": "objectid",
-            "AMLIS_KEY": "amlis_key",
-            "STATE_KEY": "state_key",
-            "PA_NUMBER": "pa_number",
-            "PA_NAME": "pa_name",
-            "PU_NUMBER": "pu_number",
-            "PU_NAME": "pu_name",
-            "EST_LATITUDE": "est_latitude",
-            "EST_LONGITUDE": "est_longitude",
-            "LAT_DEG": "lat_deg",
-            "LAT_MIN": "lat_min",
-            "LON_DEG": "lon_deg",
-            "LON_MIN": "lon_min",
-            "COUNTY": "county",
-            "FIPS_CODE": "fips_code",
-            "CONG_DIST": "cong_dist",
-            "QUAD_NAME": "quad_name",
-            "HUC_CODE": "huc_code",
-            "WATERSHED": "watershed",
-            "MINE_TYPE": "mine_type",
-            "ORE_TYPES": "ore_types",
-            "OWNER_PRIVATE": "owner_private",
-            "OWNER_STATE": "owner_state",
-            "OWNER_INDIAN": "owner_indian",
-            "OWNER_BLM": "owner_blm",
-            "OWNER_FOREST": "owner_forest",
-            "OWNER_NATIONAL": "owner_national",
-            "OWNER_OTHER": "owner_other",
-            "POPULATION": "population",
-            "DATE_PREPARED": "date_prepared",
-            "DATE_REVISED": "date_revised",
-            "PRIORITY": "priority",
-            "PROB_TY_CD": "prob_ty_cd",
-            "PROB_TY_NAME": "prob_ty_name",
-            "PROGRAM": "program",
-            "UNFD_UNITS": "unfd_units",
-            "UNFD_METERS": "unfd_meters",
-            "UNFD_COST": "unfd_cost",
-            "UNFD_GPRA": "unfd_gpra",
-            "FUND_UNITS": "fund_units",
-            "FUND_METERS": "fund_meters",
-            "FUND_COST": "fund_cost",
-            "FUND_GPRA": "fund_gpra",
-            "COMP_UNITS": "comp_units",
-            "COMP_METERS": "comp_meters",
-            "COMP_COST": "comp_cost",
-            "COMP_GPRA": "comp_gpra",
-            "TOTAL_UNITS": "total_units",
-            "TOTAL_COST": "total_cost",
-            "x": "x",
-            "y": "y",
-            "geometry": "geom",
-            "access_date": "access_date"
-        }
-    )
-    print(df.head(3))
-
-
-    with engine.begin() as conn:
-        df.to_sql(
-            table_name,
-            con=conn,
-            if_exists="append",
-            index=False,  # avoid stray index column
-            method="multi",
-            chunksize=1000,
-            dtype=eamlis_format_dict,
-        )
-
-    print(f"Data from: {infile} apppended to {table_name}.")
-
+# TODO: rewrite functions for creating permit tables
 
 if __name__ == "__main__":
-    # append_to_annual_mining_table_from_local()
-    # append_to_annual_mining_table_from_local_directory()
-    # append_to_annual_mining_table_from_gcs()
-    # append_to_highwall_centerline_table_from_local()
-    # append_to_counties_table_from_local()
-    # append_to_wv_permits_table_from_local()
-    # append_to_huc_table_from_local()
+    append_to_annual_mining_table_from_local()
+    append_to_annual_mining_table_from_local_directory()
+    append_to_annual_mining_table_from_gcs()
+    append_to_highwall_centerline_table_from_local()
+    append_to_counties_table_from_local()
+    append_to_huc_table_from_local()
     append_to_eamlis_table_from_local()
