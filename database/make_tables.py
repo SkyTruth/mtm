@@ -44,39 +44,48 @@ def create_annual_mining_table():
         print(f"Successfully created table: {table_name}.")
 
 
-def create_cumulative_mining_table():
+def create_highwall_detections_table():
     engine = connect_tcp_socket()
-    table_name = "cumulative_mining"
-
-    # SQL statement for creating table
-    create_table_sql = f"""
-        CREATE TABLE IF NOT EXISTS {table_name} (
-            id              TEXT,
-            mining_year     INT,
-            area            DOUBLE PRECISION,
-            geom            geometry(MultiPolygon, 4326),
-            -- This line below, assigns primary key based on id and mining year, 
-            -- allowing for duplicate id values.
-            CONSTRAINT {table_name}_pkey PRIMARY KEY (id, mining_year)
-        );
-    """
-
-    with engine.connect() as conn:
-        conn.execute(sqlalchemy.text(create_table_sql))
-        conn.commit()
-        print(f"Successfully created table: {table_name}.")
-
-
-def create_highwall_centerlines_table():
-    engine = connect_tcp_socket()
-    table_name = "highwall_centerlines"
+    table_name = "highwall_detections"
 
     # SQL statement for creating table
     create_stmt = f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
-            id              TEXT PRIMARY KEY,
-            detect_length   FLOAT,
-            geom            geometry(MultiLineString, 4326)
+            highwall_id         INT,
+            rec_status          TEXT,
+            rec_status_yr       INT,
+            earliest_vis_yr     INT,
+            first_mined_yr      INT,
+            last_mined_yr       INT,
+            max_age             INT,
+            min_age             INT,
+            mid_age             DOUBLE PRECISION,
+            age_uncertainty     DOUBLE PRECISION,
+            lidar_project       TEXT,
+            lidar_yr            INT,
+            mean_slope          DOUBLE PRECISION,
+            med_slope           DOUBLE PRECISION,
+            max_slope           DOUBLE PRECISION,
+            all_permit_ids      TEXT,
+            segment_id          INT,
+            raw_length          DOUBLE PRECISION,
+            length              DOUBLE PRECISION,
+            base_elevation      DOUBLE PRECISION,
+            top_elevation       DOUBLE PRECISION,
+            height              DOUBLE PRECISION,
+            min_cost            DOUBLE PRECISION,
+            mid_cost            DOUBLE PRECISION,
+            max_cost            DOUBLE PRECISION,
+            permit_id           TEXT,
+            state               TEXT,
+            permittee           TEXT,
+            mine_name           TEXT,
+            mine_status         TEXT,
+            bond_status         TEXT,
+            avail_bond          DOUBLE PRECISION,
+            full_bond           DOUBLE PRECISION,
+            post_smcra          INT,
+            geom                geometry(MultiLineString, 4326)
         );
     """
 
@@ -93,81 +102,27 @@ def create_counties_table():
     # SQL statement for creating table
     create_stmt = f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
-            statefp     INT,
-            countyfp	INT,
-            countyns	INT,
-            geoid	    INT,
-            geoidfq	    TEXT,
-            name	    TEXT,
-            namelsad	TEXT,
-            lsad	    INT,
-            classfp     TEXT,
-            mtfcc	    TEXT,
-            csafp	    INT,
-            cbsafp      INT,
-            metdivfp	INT,
-            funcstat	TEXT,
-            aland	    DOUBLE PRECISION,
-            awater	    DOUBLE PRECISION,
-            intptlat	DOUBLE PRECISION,
-            intptlon    DOUBLE PRECISION,
-            geom        geometry(MultiPolygon, 4326)
-        );
-    """
+            statefp         INT,
+            countyfp	    INT,
+            countyns	    INT,
+            geoid	        INT,
+            geoidfq	        TEXT,
+            name	        TEXT,
+            namelsad	    TEXT,
+            lsad	        INT,
+            classfp         TEXT,
+            mtfcc	        TEXT,
+            csafp	        INT,
+            cbsafp          INT,
+            metdivfp	    INT,
+            funcstat	    TEXT,
+            aland	        DOUBLE PRECISION,
+            awater	        DOUBLE PRECISION,
+            intptlat	    DOUBLE PRECISION,
+            intptlon        DOUBLE PRECISION,
+            geom            geometry(MultiPolygon, 4326),
+            access_date     TEXT
 
-    with engine.connect() as conn:
-        conn.execute(sqlalchemy.text(create_stmt))
-        conn.commit()
-        print(f"Successfully created table: {table_name}.")
-
-
-def create_wv_permits_table():
-    engine = connect_tcp_socket()
-    table_name = "state_permits_wv"
-
-    # SQL statement for creating table
-    create_stmt = f"""
-        CREATE TABLE IF NOT EXISTS {table_name} (
-            st_id       TEXT PRIMARY KEY,
-            permit_id   TEXT,
-            mapdate	    DATE,
-            maptype     TEXT,
-            active_vio	INT,
-            total_vio	INT,
-            facility_n  TEXT,
-            acres_orig	DOUBLE PRECISION,
-            acres_curr	DOUBLE PRECISION,
-            acres_dist	DOUBLE PRECISION,
-            acres_recl	DOUBLE PRECISION,
-            mstatus     TEXT,
-            mdate	    DATE,
-            issue_date	DATE,
-            expire_dat	DATE,
-            permittee   TEXT,
-            operator    TEXT,
-            last_updat	DATE,
-            comments    TEXT,
-            pstatus     TEXT,
-            ma_area     TEXT,
-            ma_contour  TEXT,
-            ma_mtntop   TEXT,
-            ma_steepsl  TEXT,
-            ma_auger    TEXT,
-            ma_roompil  TEXT,
-            ma_longwal  TEXT,
-            ma_refuse   TEXT,
-            ma_loadout  TEXT,
-            ma_preppla  TEXT,
-            ma_haulroa  TEXT,
-            ma_rockfil  TEXT,
-            ma_impound  TEXT,
-            ma_tipple   TEXT,
-            pmlu1       TEXT,
-            pmlu2       TEXT,
-            weblink1    TEXT,
-            st_area_sh  FLOAT,
-            st_length_  FLOAT,
-            geom        geometry(MultiPolygon, 4326)
         );
     """
 
@@ -184,7 +139,8 @@ def create_huc_table():
     # SQL statement for creating table
     create_stmt = f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
-            objectid                    INT PRIMARY KEY,
+            st_id                       TEXT PRIMARY KEY,
+            objectid                    INT,
             tnmid                       TEXT,
             metasourceid                TEXT,
             sourcedatadesc              TEXT,
@@ -211,7 +167,8 @@ def create_huc_table():
             huc4                        TEXT,
             huc6                        TEXT,
             huc8                        TEXT,
-            geom                        geometry(MultiPolygon, 4326)
+            geom                        geometry(MultiPolygon, 4326),
+            access_date                 TEXT
         );
     """
 
@@ -290,11 +247,70 @@ def create_eamlis_table():
         print(f"Successfully created table: {table_name}.")
 
 
+"""
+def create_wv_permits_table():
+    engine = connect_tcp_socket()
+    table_name = "state_permits_wv"
+
+    # SQL statement for creating table
+    create_stmt = f'''
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            st_id       TEXT PRIMARY KEY,
+            permit_id   TEXT,
+            mapdate	    DATE,
+            maptype     TEXT,
+            active_vio	INT,
+            total_vio	INT,
+            facility_n  TEXT,
+            acres_orig	DOUBLE PRECISION,
+            acres_curr	DOUBLE PRECISION,
+            acres_dist	DOUBLE PRECISION,
+            acres_recl	DOUBLE PRECISION,
+            mstatus     TEXT,
+            mdate	    DATE,
+            issue_date	DATE,
+            expire_dat	DATE,
+            permittee   TEXT,
+            operator    TEXT,
+            last_updat	DATE,
+            comments    TEXT,
+            pstatus     TEXT,
+            ma_area     TEXT,
+            ma_contour  TEXT,
+            ma_mtntop   TEXT,
+            ma_steepsl  TEXT,
+            ma_auger    TEXT,
+            ma_roompil  TEXT,
+            ma_longwal  TEXT,
+            ma_refuse   TEXT,
+            ma_loadout  TEXT,
+            ma_preppla  TEXT,
+            ma_haulroa  TEXT,
+            ma_rockfil  TEXT,
+            ma_impound  TEXT,
+            ma_tipple   TEXT,
+            pmlu1       TEXT,
+            pmlu2       TEXT,
+            weblink1    TEXT,
+            st_area_sh  FLOAT,
+            st_length_  FLOAT,
+            geom        geometry(MultiPolygon, 4326)
+        );
+    '''
+
+    with engine.connect() as conn:
+        conn.execute(sqlalchemy.text(create_stmt))
+        conn.commit()
+        print(f"Successfully created table: {table_name}.")
+
+
+"""
+
+# TODO: rewrite functions for creating permit tables
+
 if __name__ == "__main__":
     create_annual_mining_table()
-    # create_cumulative_mining_table()
-    # create_highwall_centerlines_table()
-    # create_counties_table()
-    # create_wv_permits_table()
-    # create_huc_table()
+    create_highwall_detections_table()
+    create_counties_table()
+    create_huc_table()
     create_eamlis_table()
