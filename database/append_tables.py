@@ -466,7 +466,7 @@ if __name__ == "__main__":
     append_to_annual_mining_table_from_local()
     append_to_annual_mining_table_from_local_directory()
     append_to_annual_mining_table_from_gcs()
-    append_to_highwall_centerline_table_from_local()
+    # append_to_highwall_centerline_table_from_local()
     append_to_counties_table_from_local()
     append_to_huc_table_from_local()
     append_to_eamlis_table_from_local()
