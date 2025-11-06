@@ -139,5 +139,5 @@ def create_annual_mining_by_county_view():
 
 if __name__ == "__main__":
     # create_test_view()
-    # create_annual_mining_by_huc_view()
+    create_annual_mining_by_huc_view()
     create_annual_mining_by_county_view()
