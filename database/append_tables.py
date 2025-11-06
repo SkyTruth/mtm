@@ -155,7 +155,7 @@ def append_to_annual_mining_table_from_gcs():
     print(f"Data from: {file_path_name} apppended to {table_name}.")
 
 
-def append_to_highwall_centerline_table_from_local():
+"""def append_to_highwall_centerline_table_from_local():
     engine = connect_tcp_socket()
 
     infile = "~/Desktop/MTM_API_SANDBOX/centerline_segments_SAMPLE.geojson"
@@ -188,7 +188,7 @@ def append_to_highwall_centerline_table_from_local():
             dtype=highwall_centerline_format_dict,
         )
     print(f"Data from: {infile} apppended to {table_name}.")
-
+"""
 
 def append_to_counties_table_from_local():
     engine = connect_tcp_socket()
