@@ -205,10 +205,10 @@ def append_to_counties_table_from_local():
 
     df = df.rename(
         columns={
+            "GEOID": "geoid",
             "STATEFP": "statefp",
             "COUNTYFP": "countyfp",
             "COUNTYNS": "countyns",
-            "GEOID": "geoid",
             "GEOIDFQ": "geoidfq",
             "NAME": "name",
             "NAMELSAD": "namelsad",

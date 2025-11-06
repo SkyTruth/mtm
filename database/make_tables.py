@@ -102,10 +102,10 @@ def create_counties_table():
     # SQL statement for creating table
     create_stmt = f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
+            geoid	        INT PRIMARY KEY,
             statefp         INT,
             countyfp	    INT,
             countyns	    INT,
-            geoid	        INT,
             geoidfq	        TEXT,
             name	        TEXT,
             namelsad	    TEXT,

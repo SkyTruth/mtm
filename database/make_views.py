@@ -58,6 +58,7 @@ def create_annual_mining_by_huc_view():
             m.data_status,
             m.geom AS mine_geom,
             -- the columns from huc_boundaries, that can be used to filter the mines
+            h.st_id,
             h.objectid,
             h.tnmid,
             h.areaacres,
@@ -137,6 +138,6 @@ def create_annual_mining_by_county_view():
 
 
 if __name__ == "__main__":
-    create_test_view()
-    create_annual_mining_by_huc_view()
+    # create_test_view()
+    # create_annual_mining_by_huc_view()
     create_annual_mining_by_county_view()
