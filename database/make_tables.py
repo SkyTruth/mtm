@@ -84,7 +84,6 @@ def create_highwall_detections_table():
             bond_status         TEXT,
             avail_bond          DOUBLE PRECISION,
             full_bond           DOUBLE PRECISION,
-            post_smcra          INT,
             geom                geometry(MultiLineString, 4326)
         );
     """
