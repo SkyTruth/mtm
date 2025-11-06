@@ -204,6 +204,7 @@ counties_format_dict = {
     "intptlat": DOUBLE_PRECISION(),
     "intptlon": DOUBLE_PRECISION(),
     "geom": Geometry("MultiPolygon", srid=4326),
+    "access_date": TEXT(),
 }
 
 wv_permit_format_dict = {
@@ -249,6 +250,7 @@ wv_permit_format_dict = {
 }
 
 huc_format_dict = {
+    "st_id": TEXT(),
     "objectid": INTEGER(),
     "tnmid": TEXT(),
     "metasourceid": TEXT(),
@@ -265,8 +267,8 @@ huc_format_dict = {
     "hutype": TEXT(),
     "humod": TEXT(),
     "globalid": TEXT(),
-    "shape_Length": DOUBLE_PRECISION(),
-    "shape_Area": DOUBLE_PRECISION(),
+    "shape_length": DOUBLE_PRECISION(),
+    "shape_area": DOUBLE_PRECISION(),
     "hutype_description": TEXT,
     "huc12": TEXT(),
     "tohuc": TEXT(),
@@ -276,7 +278,8 @@ huc_format_dict = {
     "huc4": TEXT(),
     "huc6": TEXT(),
     "huc8": TEXT(),
-    "geom": Geometry("Point", srid=4326),
+    "geom": Geometry("MultiPolygon", srid=4326),
+    "access_date": TEXT(),
 }
 
 eamlis_format_dict = {
@@ -331,6 +334,6 @@ eamlis_format_dict = {
     "total_cost": TEXT(),
     "x": DOUBLE_PRECISION(),
     "y": DOUBLE_PRECISION(),
-    "geom": Geometry("MultiPolygon", srid=4326),
+    "geom": Geometry("Point", srid=4326),
     "access_date": TEXT(),
 }
