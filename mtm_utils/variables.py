@@ -185,10 +185,10 @@ highwall_centerline_format_dict = {
 }
 
 counties_format_dict = {
+    "geoid": INTEGER(),
     "statefp": INTEGER(),
     "countyfp": INTEGER(),
     "countyns": INTEGER(),
-    "geoid": INTEGER(),
     "geoidfq": TEXT(),
     "name": TEXT(),
     "namelsad": TEXT(),
