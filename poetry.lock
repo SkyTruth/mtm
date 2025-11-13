@@ -253,13 +253,13 @@ test = ["coverage", "pytest (>=4.0.0)", "pytest-cov", "pytest-runner", "pytest-s
 
 [[package]]
 name = "certifi"
-version = "2025.10.5"
+version = "2025.11.12"
 description = "Python package for providing Mozilla's CA Bundle."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "certifi-2025.10.5-py3-none-any.whl", hash = "sha256:0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de"},
-    {file = "certifi-2025.10.5.tar.gz", hash = "sha256:47c09d31ccf2acf0be3f701ea53595ee7e0b8fa08801c6624be771df09ae7b43"},
+    {file = "certifi-2025.11.12-py3-none-any.whl", hash = "sha256:97de8790030bbd5c2d96b7ec782fc2f7820ef8dba6db909ccf95449f2d062d4b"},
+    {file = "certifi-2025.11.12.tar.gz", hash = "sha256:d8ab5478f2ecd78af242878415affce761ca6bc54a22a27e026d7c25357c3316"},
 ]
 
 [[package]]
@@ -678,13 +678,13 @@ wmi = ["wmi (>=1.5.1)"]
 
 [[package]]
 name = "earthengine-api"
-version = "1.6.14"
+version = "1.7.0"
 description = "Earth Engine Python API"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 files = [
-    {file = "earthengine_api-1.6.14-py3-none-any.whl", hash = "sha256:f44d66cc65b86d63cc20d56187b20d12c0a69b8cd6a4020ff71bbce5e95fe789"},
-    {file = "earthengine_api-1.6.14.tar.gz", hash = "sha256:3380f1fa40a5fa937f954bfa8fe8617231956a79c2e808dbd93f2b5b203114a9"},
+    {file = "earthengine_api-1.7.0-py3-none-any.whl", hash = "sha256:d680f99644fd4be8c3602c1152ebd3fe98c85b302a76d18146b6991b9971c995"},
+    {file = "earthengine_api-1.7.0.tar.gz", hash = "sha256:d879ea33684c5c4d948bcbcf1becf9eb3db71264c9a7db3a7c32da3e3f05bf38"},
 ]
 
 [package.dependencies]
@@ -940,8 +940,8 @@ files = [
 google-auth = ">=2.14.1,<3.0.0"
 googleapis-common-protos = ">=1.56.2,<2.0.0"
 proto-plus = [
-    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
     {version = ">=1.22.3,<2.0.0", markers = "python_version < \"3.13\""},
+    {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.0 || >4.21.0,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<7.0.0"
 requests = ">=2.18.0,<3.0.0"
@@ -954,13 +954,13 @@ grpcio-gcp = ["grpcio-gcp (>=0.2.2,<1.0.0)"]
 
 [[package]]
 name = "google-api-python-client"
-version = "2.185.0"
+version = "2.187.0"
 description = "Google API Client Library for Python"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "google_api_python_client-2.185.0-py3-none-any.whl", hash = "sha256:00fe173a4b346d2397fbe0d37ac15368170dfbed91a0395a66ef2558e22b93fc"},
-    {file = "google_api_python_client-2.185.0.tar.gz", hash = "sha256:aa1b338e4bb0f141c2df26743f6b46b11f38705aacd775b61971cbc51da089c3"},
+    {file = "google_api_python_client-2.187.0-py3-none-any.whl", hash = "sha256:d8d0f6d85d7d1d10bdab32e642312ed572bdc98919f72f831b44b9a9cebba32f"},
+    {file = "google_api_python_client-2.187.0.tar.gz", hash = "sha256:e98e8e8f49e1b5048c2f8276473d6485febc76c9c47892a8b4d1afa2c9ec8278"},
 ]
 
 [package.dependencies]
@@ -972,13 +972,13 @@ uritemplate = ">=3.0.1,<5"
 
 [[package]]
 name = "google-auth"
-version = "2.42.0"
+version = "2.43.0"
 description = "Google Authentication Library"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "google_auth-2.42.0-py2.py3-none-any.whl", hash = "sha256:f8f944bcb9723339b0ef58a73840f3c61bc91b69bf7368464906120b55804473"},
-    {file = "google_auth-2.42.0.tar.gz", hash = "sha256:9bbbeef3442586effb124d1ca032cfb8fb7acd8754ab79b55facd2b8f3ab2802"},
+    {file = "google_auth-2.43.0-py2.py3-none-any.whl", hash = "sha256:af628ba6fa493f75c7e9dbe9373d148ca9f4399b5ea29976519e0a3848eddd16"},
+    {file = "google_auth-2.43.0.tar.gz", hash = "sha256:88228eee5fc21b62a1b5fe773ca15e67778cb07dc8363adcb4a8827b52d81483"},
 ]
 
 [package.dependencies]
@@ -998,18 +998,18 @@ urllib3 = ["packaging", "urllib3"]
 
 [[package]]
 name = "google-auth-httplib2"
-version = "0.2.0"
+version = "0.2.1"
 description = "Google Authentication Library: httplib2 transport"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 files = [
-    {file = "google-auth-httplib2-0.2.0.tar.gz", hash = "sha256:38aa7badf48f974f1eb9861794e9c0cb2a0511a4ec0679b1f886d108f5640e05"},
-    {file = "google_auth_httplib2-0.2.0-py2.py3-none-any.whl", hash = "sha256:b65a0a2123300dd71281a7bf6e64d65a0759287df52729bdd1ae2e47dc311a3d"},
+    {file = "google_auth_httplib2-0.2.1-py3-none-any.whl", hash = "sha256:1be94c611db91c01f9703e7f62b0a59bbd5587a95571c7b6fade510d648bc08b"},
+    {file = "google_auth_httplib2-0.2.1.tar.gz", hash = "sha256:5ef03be3927423c87fb69607b42df23a444e434ddb2555b73b3679793187b7de"},
 ]
 
 [package.dependencies]
-google-auth = "*"
-httplib2 = ">=0.19.0"
+google-auth = ">=1.32.0,<3.0.0"
+httplib2 = ">=0.19.0,<1.0.0"
 
 [[package]]
 name = "google-cloud-core"
@@ -1031,17 +1031,17 @@ grpc = ["grpcio (>=1.38.0,<2.0.0)", "grpcio (>=1.75.1,<2.0.0)", "grpcio-status (
 
 [[package]]
 name = "google-cloud-storage"
-version = "3.4.1"
+version = "3.5.0"
 description = "Google Cloud Storage API client library"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "google_cloud_storage-3.4.1-py3-none-any.whl", hash = "sha256:972764cc0392aa097be8f49a5354e22eb47c3f62370067fb1571ffff4a1c1189"},
-    {file = "google_cloud_storage-3.4.1.tar.gz", hash = "sha256:6f041a297e23a4b485fad8c305a7a6e6831855c208bcbe74d00332a909f82268"},
+    {file = "google_cloud_storage-3.5.0-py3-none-any.whl", hash = "sha256:e28fd6ad8764e60dbb9a398a7bc3296e7920c494bc329057d828127e5f9630d3"},
+    {file = "google_cloud_storage-3.5.0.tar.gz", hash = "sha256:10b89e1d1693114b3e0ca921bdd28c5418701fd092e39081bb77e5cee0851ab7"},
 ]
 
 [package.dependencies]
-google-api-core = ">=2.15.0,<3.0.0"
+google-api-core = ">=2.27.0,<3.0.0"
 google-auth = ">=2.26.1,<3.0.0"
 google-cloud-core = ">=2.4.2,<3.0.0"
 google-crc32c = ">=1.1.3,<2.0.0"
@@ -1118,13 +1118,13 @@ requests = ["requests (>=2.18.0,<3.0.0dev)"]
 
 [[package]]
 name = "googleapis-common-protos"
-version = "1.71.0"
+version = "1.72.0"
 description = "Common protobufs used in Google APIs"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "googleapis_common_protos-1.71.0-py3-none-any.whl", hash = "sha256:59034a1d849dc4d18971997a72ac56246570afdd17f9369a0ff68218d50ab78c"},
-    {file = "googleapis_common_protos-1.71.0.tar.gz", hash = "sha256:1aec01e574e29da63c80ba9f7bbf1ccfaacf1da877f23609fe236ca7c72a2e2e"},
+    {file = "googleapis_common_protos-1.72.0-py3-none-any.whl", hash = "sha256:4299c5a82d5ae1a9702ada957347726b167f9f8d1fc352477702a1e851ff4038"},
+    {file = "googleapis_common_protos-1.72.0.tar.gz", hash = "sha256:e55a601c1b32b52d7a3e65f43563e2aa61bcd737998ee672ac9b951cd49319f5"},
 ]
 
 [package.dependencies]
@@ -1230,13 +1230,13 @@ all = ["flake8 (>=7.1.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2
 
 [[package]]
 name = "imageio"
-version = "2.37.0"
-description = "Library for reading and writing a wide range of image, video, scientific, and volumetric data formats."
+version = "2.37.2"
+description = "Read and write images and video across all major formats. Supports scientific and volumetric data."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "imageio-2.37.0-py3-none-any.whl", hash = "sha256:11efa15b87bc7871b61590326b2d635439acc321cf7f8ce996f812543ce10eed"},
-    {file = "imageio-2.37.0.tar.gz", hash = "sha256:71b57b3669666272c818497aebba2b4c5f20d5b37c81720e5e1a56d59c492996"},
+    {file = "imageio-2.37.2-py3-none-any.whl", hash = "sha256:ad9adfb20335d718c03de457358ed69f141021a333c40a53e57273d8a5bd0b9b"},
+    {file = "imageio-2.37.2.tar.gz", hash = "sha256:0212ef2727ac9caa5ca4b2c75ae89454312f440a756fcfc8ef1993e718f50f8a"},
 ]
 
 [package.dependencies]
@@ -1244,14 +1244,14 @@ numpy = "*"
 pillow = ">=8.3.2"
 
 [package.extras]
-all-plugins = ["astropy", "av", "imageio-ffmpeg", "numpy (>2)", "pillow-heif", "psutil", "rawpy", "tifffile"]
-all-plugins-pypy = ["av", "imageio-ffmpeg", "pillow-heif", "psutil", "tifffile"]
-build = ["wheel"]
+all-plugins = ["astropy", "av", "fsspec[http]", "imageio-ffmpeg", "numpy (>2)", "pillow-heif", "psutil", "rawpy", "tifffile"]
+all-plugins-pypy = ["fsspec[http]", "imageio-ffmpeg", "pillow-heif", "psutil", "tifffile"]
 dev = ["black", "flake8", "fsspec[github]", "pytest", "pytest-cov"]
 docs = ["numpydoc", "pydata-sphinx-theme", "sphinx (<6)"]
 ffmpeg = ["imageio-ffmpeg", "psutil"]
 fits = ["astropy"]
-full = ["astropy", "av", "black", "flake8", "fsspec[github]", "gdal", "imageio-ffmpeg", "itk", "numpy (>2)", "numpydoc", "pillow-heif", "psutil", "pydata-sphinx-theme", "pytest", "pytest-cov", "rawpy", "sphinx (<6)", "tifffile", "wheel"]
+freeimage = ["fsspec[http]"]
+full = ["astropy", "av", "black", "flake8", "fsspec[github,http]", "imageio-ffmpeg", "numpy (>2)", "numpydoc", "pillow-heif", "psutil", "pydata-sphinx-theme", "pytest", "pytest-cov", "rawpy", "sphinx (<6)", "tifffile"]
 gdal = ["gdal"]
 itk = ["itk"]
 linting = ["black", "flake8"]
@@ -1615,8 +1615,8 @@ files = [
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -2774,42 +2774,37 @@ propcache = ">=0.2.1"
 
 [[package]]
 name = "zope-interface"
-version = "8.0.1"
+version = "8.1"
 description = "Interfaces for Python"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 files = [
-    {file = "zope_interface-8.0.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:fd7195081b8637eeed8d73e4d183b07199a1dc738fb28b3de6666b1b55662570"},
-    {file = "zope_interface-8.0.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:f7c4bc4021108847bce763673ce70d0716b08dfc2ba9889e7bad46ac2b3bb924"},
-    {file = "zope_interface-8.0.1-cp310-cp310-manylinux1_i686.manylinux2014_i686.manylinux_2_17_i686.manylinux_2_5_i686.whl", hash = "sha256:758803806b962f32c87b31bb18c298b022965ba34fe532163831cc39118c24ab"},
-    {file = "zope_interface-8.0.1-cp310-cp310-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:f8e88f35f86bbe8243cad4b2972deef0fdfca0a0723455abbebdc83bbab96b69"},
-    {file = "zope_interface-8.0.1-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:7844765695937d9b0d83211220b72e2cf6ac81a08608ad2b58f2c094af498d83"},
-    {file = "zope_interface-8.0.1-cp310-cp310-win_amd64.whl", hash = "sha256:64fa7b206dd9669f29d5c1241a768bebe8ab1e8a4b63ee16491f041e058c09d0"},
-    {file = "zope_interface-8.0.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:4bd01022d2e1bce4a4a4ed9549edb25393c92e607d7daa6deff843f1f68b479d"},
-    {file = "zope_interface-8.0.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:29be8db8b712d94f1c05e24ea230a879271d787205ba1c9a6100d1d81f06c69a"},
-    {file = "zope_interface-8.0.1-cp311-cp311-manylinux1_i686.manylinux2014_i686.manylinux_2_17_i686.manylinux_2_5_i686.whl", hash = "sha256:51ae1b856565b30455b7879fdf0a56a88763b401d3f814fa9f9542d7410dbd7e"},
-    {file = "zope_interface-8.0.1-cp311-cp311-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:d2e7596149cb1acd1d4d41b9f8fe2ffc0e9e29e2e91d026311814181d0d9efaf"},
-    {file = "zope_interface-8.0.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:b2737c11c34fb9128816759864752d007ec4f987b571c934c30723ed881a7a4f"},
-    {file = "zope_interface-8.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:cf66e4bf731aa7e0ced855bb3670e8cda772f6515a475c6a107bad5cb6604103"},
-    {file = "zope_interface-8.0.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:115f27c1cc95ce7a517d960ef381beedb0a7ce9489645e80b9ab3cbf8a78799c"},
-    {file = "zope_interface-8.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:af655c573b84e3cb6a4f6fd3fbe04e4dc91c63c6b6f99019b3713ef964e589bc"},
-    {file = "zope_interface-8.0.1-cp312-cp312-manylinux1_i686.manylinux2014_i686.manylinux_2_17_i686.manylinux_2_5_i686.whl", hash = "sha256:23f82ef9b2d5370750cc1bf883c3b94c33d098ce08557922a3fbc7ff3b63dfe1"},
-    {file = "zope_interface-8.0.1-cp312-cp312-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:35a1565d5244997f2e629c5c68715b3d9d9036e8df23c4068b08d9316dcb2822"},
-    {file = "zope_interface-8.0.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:029ea1db7e855a475bf88d9910baab4e94d007a054810e9007ac037a91c67c6f"},
-    {file = "zope_interface-8.0.1-cp312-cp312-win_amd64.whl", hash = "sha256:0beb3e7f7dc153944076fcaf717a935f68d39efa9fce96ec97bafcc0c2ea6cab"},
-    {file = "zope_interface-8.0.1-cp313-cp313-macosx_10_9_x86_64.whl", hash = "sha256:c7cc027fc5c61c5d69e5080c30b66382f454f43dc379c463a38e78a9c6bab71a"},
-    {file = "zope_interface-8.0.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:fcf9097ff3003b7662299f1c25145e15260ec2a27f9a9e69461a585d79ca8552"},
-    {file = "zope_interface-8.0.1-cp313-cp313-manylinux1_i686.manylinux2014_i686.manylinux_2_17_i686.manylinux_2_5_i686.whl", hash = "sha256:6d965347dd1fb9e9a53aa852d4ded46b41ca670d517fd54e733a6b6a4d0561c2"},
-    {file = "zope_interface-8.0.1-cp313-cp313-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:9a3b8bb77a4b89427a87d1e9eb969ab05e38e6b4a338a9de10f6df23c33ec3c2"},
-    {file = "zope_interface-8.0.1-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:87e6b089002c43231fb9afec89268391bcc7a3b66e76e269ffde19a8112fb8d5"},
-    {file = "zope_interface-8.0.1-cp313-cp313-win_amd64.whl", hash = "sha256:64a43f5280aa770cbafd0307cb3d1ff430e2a1001774e8ceb40787abe4bb6658"},
-    {file = "zope_interface-8.0.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:b84464a9fcf801289fa8b15bfc0829e7855d47fb4a8059555effc6f2d1d9a613"},
-    {file = "zope_interface-8.0.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:7b915cf7e747b5356d741be79a153aa9107e8923bc93bcd65fc873caf0fb5c50"},
-    {file = "zope_interface-8.0.1-cp39-cp39-manylinux1_i686.manylinux2014_i686.manylinux_2_17_i686.manylinux_2_5_i686.whl", hash = "sha256:110c73ddf974b369ef3c6e7b0d87d44673cf4914eba3fe8a33bfb21c6c606ad8"},
-    {file = "zope_interface-8.0.1-cp39-cp39-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:9e9bdca901c1bcc34e438001718512c65b3b8924aabcd732b6e7a7f0cd715f17"},
-    {file = "zope_interface-8.0.1-cp39-cp39-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:bbd22d4801ad3e8ec704ba9e3e6a4ac2e875e4d77e363051ccb76153d24c5519"},
-    {file = "zope_interface-8.0.1-cp39-cp39-win_amd64.whl", hash = "sha256:a0016ca85f93b938824e2f9a43534446e95134a2945b084944786e1ace2020bc"},
-    {file = "zope_interface-8.0.1.tar.gz", hash = "sha256:eba5610d042c3704a48222f7f7c6ab5b243ed26f917e2bc69379456b115e02d1"},
+    {file = "zope_interface-8.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:b6370bc29799223e9a4756e89f358cbfba8e4112fc5046403c849bcc52f1ff32"},
+    {file = "zope_interface-8.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:638e83a5c15a337e52d36620478d49dbf206a46d34bcc75ff03211e94b12267d"},
+    {file = "zope_interface-8.1-cp310-cp310-manylinux1_i686.manylinux2014_i686.manylinux_2_17_i686.manylinux_2_5_i686.whl", hash = "sha256:b88e0516bc7f3979839f44adfdbfa8a57d81154a161cbd64642ace22892969af"},
+    {file = "zope_interface-8.1-cp310-cp310-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:3c17d683a11cf09eebf332e4771fc2973c15f8428a9a4fc478b39a422f32157b"},
+    {file = "zope_interface-8.1-cp310-cp310-win_amd64.whl", hash = "sha256:e826eeda579fcee2624eea6014877103ca7510bd1353bfae1d64e1cabd691d35"},
+    {file = "zope_interface-8.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:db263a60c728c86e6a74945f3f74cfe0ede252e726cf71e05a0c7aca8d9d5432"},
+    {file = "zope_interface-8.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:cfa89e5b05b7a79ab34e368293ad008321231e321b3ce4430487407b4fe3450a"},
+    {file = "zope_interface-8.1-cp311-cp311-manylinux1_i686.manylinux2014_i686.manylinux_2_17_i686.manylinux_2_5_i686.whl", hash = "sha256:87eaf011912a06ef86da70aba2ca0ddb68b8ab84a7d1da6b144a586b70a61bca"},
+    {file = "zope_interface-8.1-cp311-cp311-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:10f06d128f1c181ded3af08c5004abcb3719c13a976ce9163124e7eeded6899a"},
+    {file = "zope_interface-8.1-cp311-cp311-win_amd64.whl", hash = "sha256:17fb5382a4b9bd2ea05648a457c583e5a69f0bfa3076ed1963d48bc42a2da81f"},
+    {file = "zope_interface-8.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:a8aee385282ab2a9813171b15f41317e22ab0a96cf05e9e9e16b29f4af8b6feb"},
+    {file = "zope_interface-8.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:af651a87f950a13e45fd49510111f582717fb106a63d6a0c2d3ba86b29734f07"},
+    {file = "zope_interface-8.1-cp312-cp312-manylinux1_i686.manylinux2014_i686.manylinux_2_17_i686.manylinux_2_5_i686.whl", hash = "sha256:80ed7683cf337f3b295e4b96153e2e87f12595c218323dc237c0147a6cc9da26"},
+    {file = "zope_interface-8.1-cp312-cp312-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:fb9a7a45944b28c16d25df7a91bf2b9bdb919fa2b9e11782366a1e737d266ec1"},
+    {file = "zope_interface-8.1-cp312-cp312-win_amd64.whl", hash = "sha256:fc5e120e3618741714c474b2427d08d36bd292855208b4397e325bd50d81439d"},
+    {file = "zope_interface-8.1-cp313-cp313-macosx_10_9_x86_64.whl", hash = "sha256:afc2bbd1c5d9ecda8c2114a2793bda811ea175742c93dc77a02d5ed49c7a732e"},
+    {file = "zope_interface-8.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:827a9ad0ebfef467f047d17d83868f66eb44feb00daf2e3dbd404b6f1cb08858"},
+    {file = "zope_interface-8.1-cp313-cp313-manylinux1_i686.manylinux2014_i686.manylinux_2_17_i686.manylinux_2_5_i686.whl", hash = "sha256:3913ad3fced813c4af551aae4511dc000c6d4df648430060593aec851bb5fc19"},
+    {file = "zope_interface-8.1-cp313-cp313-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:c073ba91caeff93aaf9569c9c3ec3fd790290329cefa69eb6dcb43eabb832c2c"},
+    {file = "zope_interface-8.1-cp313-cp313-win_amd64.whl", hash = "sha256:eef72e1726fa055510c1442c3bc3614a4fd0cd056e26c824c26a27d02ad9cfdd"},
+    {file = "zope_interface-8.1-cp314-cp314-macosx_10_9_x86_64.whl", hash = "sha256:04ee726e6939be1c2924d8513a17eb819217129e25d3217ca009cf9c8832e3fe"},
+    {file = "zope_interface-8.1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:b931e7241d089df18e0e34a7bfba019bc89c5bf49af8894b4540a0857cb70b79"},
+    {file = "zope_interface-8.1-cp314-cp314-manylinux1_i686.manylinux2014_i686.manylinux_2_17_i686.manylinux_2_5_i686.whl", hash = "sha256:c09a4a25007f113c82fcdf4b40ffcbcfaa3f26e428d9cbb9ea322fe27149bc39"},
+    {file = "zope_interface-8.1-cp314-cp314-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:26c515e2f92da839d531ef86a3bbaafc3f22bd9aea5eb0c1dc397f67abff56d7"},
+    {file = "zope_interface-8.1-cp314-cp314-win_amd64.whl", hash = "sha256:76dfe5580cac661b0aad5f0d308c09d25b567c908a1695bd68986507fd61b61d"},
+    {file = "zope_interface-8.1.tar.gz", hash = "sha256:a02ee40770c6a2f3d168a8f71f09b62aec3e4fb366da83f8e849dbaa5b38d12f"},
 ]
 
 [package.extras]
