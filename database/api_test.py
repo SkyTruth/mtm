@@ -7,7 +7,7 @@ from shapely.geometry import shape
 def testing_access():
     
     mtm_url = (
-        "https://tipg-896778192680.us-central1.run.app/collections/public.state_permits/items"
+        "https://api.mining.skytruth.org/collections/public.state_permits/items"
         "?filter=acres_curr<=100"
         "&limit=50"
     )
@@ -21,7 +21,7 @@ def testing_access():
 
 # Get Permit By ID
 def permit_test():
-    url = ("https://tipg-896778192680.us-central1.run.app/collections/public.state_permits/items")
+    url = ("https://api.mining.skytruth.org/collections/public.state_permits/items")
 
     # Define Filter Params (OGC API CQL)
     fitler_params = {
@@ -35,7 +35,7 @@ def permit_test():
 
 # Get Mine Footprint by ID
 def fp_id_test():
-    url = "https://tipg-896778192680.us-central1.run.app/collections/public.annual_mining/items"
+    url = "https://api.mining.skytruth.org/public.annual_mining/items"
 
     # This uses the OGC API "CQL" filter parameter
     fitler_params = {
@@ -50,7 +50,7 @@ def fp_id_test():
 
 # Get Mine FPs by BBOX
 def fp_bbox_test():
-    url = "https://tipg-896778192680.us-central1.run.app/collections/public.annual_mining/items"
+    url = "https://api.mining.skytruth.org/collections/public.annual_mining/items"
 
     # BBOX Params are LL_X, LL_Y, UR_X, UR_Y (min_x, min_y, max_x, max_y)
     # This uses the OGC API "CQL" filter parameter
@@ -68,7 +68,7 @@ def fp_bbox_test():
 def fp_permit_test():
     test_permit_id = 'S501889'
 
-    url_base = "https://tipg-896778192680.us-central1.run.app"
+    url_base = "https://api.mining.skytruth.org"
     permit_url = f"{url_base}/collections/public.state_permits/items/"
 
     # Define Filter Params (OGC API CQL)
@@ -102,7 +102,7 @@ def fp_permit_test():
 def permit_fp_test():
     test_mine_id = '-303538+140420'
 
-    url_base = "https://tipg-896778192680.us-central1.run.app"
+    url_base = "https://api.mining.skytruth.org"
     mine_url = f"{url_base}/collections/public.annual_mining/items/"
 
     # Define Filter Params (OGC API CQL)
