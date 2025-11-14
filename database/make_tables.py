@@ -51,7 +51,7 @@ def create_highwall_detections_table():
     # SQL statement for creating table
     create_stmt = f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
-            highwall_id         INT,
+            highwall_id         INT PRIMARY KEY,
             rec_status          TEXT,
             rec_status_yr       INT,
             earliest_vis_yr     INT,
@@ -84,7 +84,7 @@ def create_highwall_detections_table():
             bond_status         TEXT,
             avail_bond          DOUBLE PRECISION,
             full_bond           DOUBLE PRECISION,
-            geom                geometry(MultiLineString, 4326)
+            geom                geometry(MultiPolygon, 4326)
         );
     """
 

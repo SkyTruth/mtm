@@ -155,14 +155,11 @@ def append_to_annual_mining_table_from_gcs():
     print(f"Data from: {file_path_name} apppended to {table_name}.")
 
 
-"""def append_to_highwall_centerline_table_from_local():
+"""def append_to_highwall_detections_table_from_local():
     engine = connect_tcp_socket()
 
-    infile = "~/Desktop/MTM_API_SANDBOX/centerline_segments_SAMPLE.geojson"
+    infile = "~/Desktop/MTM_API_SANDBOX/HIGHWALL_DETECTION_FILE.geojson"
 
-    # Options for d_status are: "final" for fully cleaned products or "provisional" for
-    # partially cleaned products. This is written into the data_status column of the table
-    # during upload.
     table_name = "highwall_detections"
 
     gdf = gpd.read_file(infile)
@@ -466,7 +463,7 @@ if __name__ == "__main__":
     append_to_annual_mining_table_from_local()
     append_to_annual_mining_table_from_local_directory()
     append_to_annual_mining_table_from_gcs()
-    # append_to_highwall_centerline_table_from_local()
+    # append_to_highwall_detections_table_from_local()
     append_to_counties_table_from_local()
     append_to_huc_table_from_local()
     append_to_eamlis_table_from_local()
