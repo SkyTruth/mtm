@@ -9,7 +9,7 @@ from mtm_utils.variables import (
     GCLOUD_FINAL_DATA_GEOJSON,
     annual_mining_input_directory,
     annual_mining_format_dict,
-    highwall_centerline_format_dict,
+    highwall_detection_format_dict,
     counties_format_dict,
     wv_permit_format_dict,
     huc_format_dict,
