@@ -611,6 +611,6 @@ if __name__ == "__main__":
     append_to_huc_table_from_local()
     append_to_eamlis_table_from_local()
     append_to_ky_permits_table_from_local()
-    append_to_wv_permits_table_from_local()
-    append_to_va_permits_table_from_local()
     append_to_tn_permits_table_from_local()
+    append_to_va_permits_table_from_local()
+    append_to_wv_permits_table_from_local()

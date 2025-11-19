@@ -508,6 +508,6 @@ if __name__ == "__main__":
     create_eamlis_table()
     create_test_table()
     create_ky_permits_table()
-    create_wv_permits_table()
-    create_va_permits_table()
     create_tn_permits_table()
+    create_va_permits_table()
+    create_wv_permits_table()
