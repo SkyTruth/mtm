@@ -170,8 +170,6 @@ def append_to_annual_mining_table_from_gcs():
 
     df = df.rename(
         columns={
-            "ID": "id",
-            "length": "detect_length",
             "geometry": "geom",
         }
     )
@@ -185,7 +183,7 @@ def append_to_annual_mining_table_from_gcs():
             index=False,  # avoid stray index column
             method="multi",
             chunksize=1000,
-            dtype=highwall_centerline_format_dict,
+            dtype=highwall_detection_format_dict,
         )
     print(f"Data from: {infile} apppended to {table_name}.")
 """
