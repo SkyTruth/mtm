@@ -7,7 +7,7 @@ def create_test_table():
 
     # Example table schema
     create_stmt = """
-    CREATE TABLE IF NOT EXISTS local_test_table_other_FINAL (
+    CREATE TABLE IF NOT EXISTS alana_table_test (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -246,54 +246,53 @@ def create_eamlis_table():
         print(f"Successfully created table: {table_name}.")
 
 
-"""
-def create_wv_permits_table():
+def create_ky_permits_table():
     engine = connect_tcp_socket()
-    table_name = "state_permits_wv"
+    table_name = "state_permits_ky"
 
     # SQL statement for creating table
     create_stmt = f'''
         CREATE TABLE IF NOT EXISTS {table_name} (
-            st_id       TEXT PRIMARY KEY,
-            permit_id   TEXT,
-            mapdate	    DATE,
-            maptype     TEXT,
-            active_vio	INT,
-            total_vio	INT,
-            facility_n  TEXT,
-            acres_orig	DOUBLE PRECISION,
-            acres_curr	DOUBLE PRECISION,
-            acres_dist	DOUBLE PRECISION,
-            acres_recl	DOUBLE PRECISION,
-            mstatus     TEXT,
-            mdate	    DATE,
-            issue_date	DATE,
-            expire_dat	DATE,
-            permittee   TEXT,
-            operator    TEXT,
-            last_updat	DATE,
-            comments    TEXT,
-            pstatus     TEXT,
-            ma_area     TEXT,
-            ma_contour  TEXT,
-            ma_mtntop   TEXT,
-            ma_steepsl  TEXT,
-            ma_auger    TEXT,
-            ma_roompil  TEXT,
-            ma_longwal  TEXT,
-            ma_refuse   TEXT,
-            ma_loadout  TEXT,
-            ma_preppla  TEXT,
-            ma_haulroa  TEXT,
-            ma_rockfil  TEXT,
-            ma_impound  TEXT,
-            ma_tipple   TEXT,
-            pmlu1       TEXT,
-            pmlu2       TEXT,
-            weblink1    TEXT,
-            st_area_sh  FLOAT,
-            st_length_  FLOAT,
-            geom        geometry(MultiPolygon, 4326)
+            st_id           TEXT PRIMARY KEY,
+            permit_id       TEXT,
+            feat_cls        TEXT,
+            source          TEXT,
+            type_flag       TEXT,
+            acres           DOUBLE PRECISION,
+            quadrangle      TEXT,
+            status_code1    TEXT,
+            permittee1      TEXT,
+            region          TEXT,
+            activity        TEXT,
+            act_rel         TEXT,
+            issue_date      DATE,
+            orig_id         TEXT,
+            national_id     TEXT,
+            shape_length    DOUBLE PRECISION,
+            per_type        TEXT,
+            shape_area      DOUBLE PRECISION,
+            permittee2      TEXT,
+            status_code2    TEXT,
+            status_desc     TEXT,
+            inspectable     TEXT,
+            curr_bond       DOUBLE PRECISION,
+            orig_bond       DOUBLE PRECISION,
+            highwall_total  INT,
+            highwall_comp   INT,
+            highwall_viol   INT,
+            permittee3      TEXT,
+            mine_name       TEXT,
+            post_smcra      INT,
+            op_status       TEXT,
+            gm_bond_status  TEXT,
+            prep_ref        TEXT,
+            avail_bond      DOUBLE PRECISION,
+            full_bond       DOUBLE PRECISION,
+            permittee       TEXT,
+            mine_status     TEXT,
+            bond_status     TEXT,
+            surf_mine       INT,
+            geom            geometry(MultiPolygon, 4326)
         );
     '''
 
@@ -303,13 +302,211 @@ def create_wv_permits_table():
         print(f"Successfully created table: {table_name}.")
 
 
-"""
+def create_wv_permits_table():
+    engine = connect_tcp_socket()
+    table_name = "state_permits_wv"
 
-# TODO: rewrite functions for creating permit tables
+    # SQL statement for creating table
+    create_stmt = f'''
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            st_id           TEXT PRIMARY KEY,
+            permit_id       TEXT,
+            map_date        DATE,
+            map_type        TEXT,
+            active_vio      INT,
+            total_vio       INT,
+            mine_name       TEXT,
+            acres_orig      DOUBLE PRECISION,
+            acres_curr      DOUBLE PRECISION,
+            acres_dist      DOUBLE PRECISION,
+            acres_recl      DOUBLE PRECISION,
+            mstatus         TEXT,
+            mdate           DATE,
+            issue_date      DATE,
+            expir_date      DATE,
+            permittee       TEXT,
+            operator        TEXT,
+            last_update     DATE,
+            comments        TEXT,
+            pstatus         TEXT,
+            area            TEXT,
+            contour         TEXT,
+            mtntop          TEXT,
+            steepslope      TEXT,
+            auger           TEXT,
+            room_pillar     TEXT,
+            longwall        TEXT,
+            refuse          TEXT,
+            loadout         TEXT,
+            prep_plant      TEXT,
+            haul_road       TEXT,
+            rockfill        TEXT,
+            impoundment     TEXT,
+            tipple          TEXT,
+            pmlu1           TEXT,
+            pmlu2           TEXT,
+            weblink         TEXT,
+            st_area         DOUBLE PRECISION,
+            st_length       DOUBLE PRECISION,
+            status_desc     TEXT,
+            permit_status   TEXT,
+            bond_amount     DOUBLE PRECISION,
+            type            TEXT,
+            current_status  TEXT,
+            post_smcra      TEXT,
+            op_status       TEXT,
+            gm_bond_status  TEXT,
+            prep_ref        TEXT,
+            avail_bond      DOUBLE PRECISION,
+            full_bond       DOUBLE PRECISION,
+            mine_status     TEXT,
+            bond_status     TEXT,
+            surf_mine       INT,
+            geom            geometry(MultiPolygon, 4326)
+        );
+    '''
+
+    with engine.connect() as conn:
+        conn.execute(sqlalchemy.text(create_stmt))
+        conn.commit()
+        print(f"Successfully created table: {table_name}.")
+
+
+def create_va_permits_table():
+    engine = connect_tcp_socket()
+    table_name = "state_permits_va"
+
+    # SQL statement for creating table
+    create_stmt = f'''
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            st_id               TEXT PRIMARY KEY,
+            permit_id           TEXT,
+            permittee           TEXT,
+            release_date        DATE,
+            trans_from          TEXT,
+            comment             TEXT,
+            acres               DOUBLE PRECISION,
+            permit_type         TEXT,
+            global_id           TEXT,
+            created_user        TEXT,
+            created_date        DATE,
+            last_edit_user      TEXT,
+            last_edit_date      DATE,
+            st_area             DOUBLE PRECISION,
+            st_length           DOUBLE PRECISION,
+            bond_code           TEXT,
+            app_no              TEXT,
+            permittee_code      TEXT,
+            operation           TEXT,
+            county              TEXT,
+            seams               TEXT,
+            quads               TEXT,
+            mine_types          TEXT,
+            permit_status       TEXT,
+            permit_status_date  DATE,
+            orig_issue          DATE,
+            anniversary         DATE,
+            bond_type           TEXT,
+            remining            TEXT,
+            remining_acres      DOUBLE PRECISION,
+            underground         TEXT,
+            mtntop              TEXT,
+            steepslope          TEXT,
+            auger               TEXT,
+            non_aoc             TEXT,
+            tbl_os_code         TEXT,
+            tbl_os_desc         TEXT,
+            pe_os_date          DATE,
+            rec_status          TEXT,
+            layer               TEXT,
+            gm_mine_name        TEXT,
+            post_smcra          INT,
+            op_status           TEXT,
+            gm_bond_status      TEXT,
+            app_date            DATE,
+            prep_ref            TEXT,
+            bond_method         TEXT,
+            permitted_acres     DOUBLE PRECISION,
+            bonded_acres        DOUBLE PRECISION,
+            bond_amount         DOUBLE PRECISION,
+            mine_name           TEXT,
+            mine_status         TEXT,
+            bond_status         TEXT,
+            issue_date          DATE,
+            surf_mine           INT,
+            full_bond           DOUBLE PRECISION,
+            avail_bond          DOUBLE PRECISION,
+            geom                geometry(MultiPolygon, 4326)
+        );
+    '''
+
+    with engine.connect() as conn:
+        conn.execute(sqlalchemy.text(create_stmt))
+        conn.commit()
+        print(f"Successfully created table: {table_name}.")
+
+
+def create_tn_permits_table():
+    engine = connect_tcp_socket()
+    table_name = "state_permits_tn"
+
+    # SQL statement for creating table
+    create_stmt = f'''
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            st_id           TEXT PRIMARY KEY,
+            permittee       TEXT,
+            op_status       TEXT,
+            mine_name       TEXT,
+            permit_id       TEXT,
+            msha_id         TEXT,
+            national_id     TEXT,
+            coal_beds       TEXT,
+            inspectable     INT,
+            post_smcra      INT,
+            acres           DOUBLE PRECISION,
+            issue_date      DATE,
+            edit_date       DATE,
+            area            INT,
+            contour         INT,
+            mtntop          INT,
+            steepslope      INT,
+            highwall        INT,
+            auger           INT,
+            comment         TEXT,
+            contact         INT,
+            info            TEXT,
+            bond_type       TEXT,
+            status          TEXT,
+            bond_amount     DOUBLE PRECISION,
+            land_req_bond   DOUBLE PRECISION,
+            water_req_bond  DOUBLE PRECISION,
+            total_req_bond  DOUBLE PRECISION,
+            shortfall       DOUBLE PRECISION,
+            notes           TEXT,
+            prep_ref        TEXT,
+            gm_bond_status  TEXT,
+            mine_status     TEXT,
+            bond_status     TEXT,
+            surf_mine       INT,
+            full_bond       DOUBLE PRECISION,
+            avail_bond      DOUBLE PRECISION,
+            geom            geometry(MultiPolygon, 4326)
+        );
+    '''
+
+    with engine.connect() as conn:
+        conn.execute(sqlalchemy.text(create_stmt))
+        conn.commit()
+        print(f"Successfully created table: {table_name}.")
 
 if __name__ == "__main__":
-    create_annual_mining_table()
-    create_highwall_detections_table()
-    create_counties_table()
-    create_huc_table()
-    create_eamlis_table()
+    # create_annual_mining_table()
+    # create_highwall_detections_table()
+    # create_counties_table()
+    # create_huc_table()
+    # create_eamlis_table()
+    # create_test_table()
+    # create_ky_permits_table()
+    # create_wv_permits_table()
+    create_va_permits_table()
+    # create_tn_permits_table()

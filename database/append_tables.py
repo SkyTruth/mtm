@@ -11,7 +11,10 @@ from mtm_utils.variables import (
     annual_mining_format_dict,
     highwall_detection_format_dict,
     counties_format_dict,
+    ky_permit_format_dict,
     wv_permit_format_dict,
+    va_permit_format_dict,
+    tn_permit_format_dict,
     huc_format_dict,
     eamlis_format_dict,
 )
@@ -393,16 +396,12 @@ def append_to_eamlis_table_from_local():
     print(f"Data from: {infile} apppended to {table_name}.")
 
 
-"""
-def append_to_wv_permits_table_from_local():
+def append_to_ky_permits_table_from_local():
     engine = connect_tcp_socket()
 
-    infile = "~/Desktop/MTM_API_SANDBOX/WVDEP_GIS_data_mining_reclamation_permit_boundary_SAMPLE.geojson"
-    state = "wv"
+    infile = "~/Documents/full_permit_dataset/ky_permits_final.geojson"
+    state = "ky"
 
-    # Options for d_status are: "final" for fully cleaned products or "provisional" for
-    # partially cleaned products. This is written into the data_status column of the table
-    # during upload.
     table_name = "state_permits_" + state
 
     gdf = gpd.read_file(infile)
@@ -414,7 +413,7 @@ def append_to_wv_permits_table_from_local():
     )
 
     # Add a new, SkyTruth ID, which is unique to each record, handles issues where there are multiple records
-    # that share a permit_id. Set the state on line 187.
+    # that share a permit_id.
     df = df.reset_index(drop=True)
     df["st_id"] = [f"st_{state}_" + str(i) for i in range(1, len(df) + 1)]
 
@@ -422,24 +421,74 @@ def append_to_wv_permits_table_from_local():
     cols = ["st_id"] + [c for c in df.columns if c != "st_id"]
     df = df[cols]
 
-    # Convert to 2D Geoms if needed
-    df["geom"] = df["geom"].apply(geom_convert_3d_to_2d)
     # print(df.head(3))
 
-    # Formate date columns, for reference, native formats for WV Permit data are:
-    #       mapdate     = YYYYMMDD
-    #       mdate       = MM/DD/YY
-    #       issue_date  = MM/DD/YY
-    #       expire_dat  = MM/DD/YY
-    #       last_updat  = MM/DD/YY
+    with engine.begin() as conn:
+        df.to_sql(
+            table_name,
+            con=conn,
+            if_exists="append",
+            index=False,  # avoid stray index column
+            method="multi",
+            chunksize=1000,
+            dtype=ky_permit_format_dict,
+        )
 
-    df["mapdate"] = pd.to_datetime(df["mapdate"], format="%Y%m%d", errors="coerce")
+    print(f"Data from: {infile} apppended to {table_name}.")
 
-    # mdate, issue_date, expire_dat, last_updat: MM/DD/YY
-    for col in ["mdate", "issue_date", "expire_dat", "last_updat"]:
+
+def append_to_wv_permits_table_from_local():
+    engine = connect_tcp_socket()
+
+    infile = "~/Documents/full_permit_dataset/wv_permits_final.geojson"
+    state = "wv"
+
+    table_name = "state_permits_" + state
+
+    gdf = gpd.read_file(infile)
+    df = gdf
+    df = df.rename(
+        columns={
+            "geometry": "geom",
+        }
+    )
+
+    # Add a new, SkyTruth ID, which is unique to each record, handles issues where there are multiple records
+    # that share a permit_id.
+    df = df.reset_index(drop=True)
+    df["st_id"] = [f"st_{state}_" + str(i) for i in range(1, len(df) + 1)]
+
+    # Reorder so unique_id is the first column
+    cols = ["st_id"] + [c for c in df.columns if c != "st_id"]
+    df = df[cols]
+
+    # Convert to 2D Geoms
+    df["geom"] = df["geom"].apply(geom_convert_3d_to_2d)
+
+    # Clean numeric columns by removing commas
+    numeric_cols = ["bond_amount", "avail_bond", "full_bond"]
+    
+    for col in numeric_cols:
         if col in df.columns:
-            df[col] = pd.to_datetime(df[col], format="%m/%d/%y", errors="coerce")
-    # print(df[["mapdate","mdate", "issue_date", "expire_dat", "last_updat"]].head(3))
+            df[col] = pd.to_numeric(
+                df[col].astype(str).str.replace(",", "", regex=False), 
+                errors="coerce"
+            )
+
+    # Fix integer columns
+    integer_cols = ["active_vio", "total_vio", "surf_mine"]
+    for col in integer_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col].astype(str).str.replace(",", "", regex=False), errors="coerce")
+            df[col] = df[col].astype("Int64")
+
+    # Format date columns
+    date_cols = ["map_date", "mdate", "issue_date", "expir_date", "last_update"]
+    for col in date_cols:
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors="coerce")
+
+    # print(df.head(3))
 
     with engine.begin() as conn:
         df.to_sql(
@@ -455,15 +504,112 @@ def append_to_wv_permits_table_from_local():
     print(f"Data from: {infile} apppended to {table_name}.")
 
 
-"""
+def append_to_va_permits_table_from_local():
+    engine = connect_tcp_socket()
 
-# TODO: rewrite functions for creating permit tables
+    infile = "~/Documents/full_permit_dataset/va_permits_final.geojson"
+    state = "va"
+
+    table_name = "state_permits_" + state
+
+    gdf = gpd.read_file(infile)
+    df = gdf
+    df = df.rename(
+        columns={
+            "geometry": "geom",
+        }
+    )
+
+    # Add a new, SkyTruth ID, which is unique to each record, handles issues where there are multiple records
+    # that share a permit_id.
+    df = df.reset_index(drop=True)
+    df["st_id"] = [f"st_{state}_" + str(i) for i in range(1, len(df) + 1)]
+
+    # Reorder so unique_id is the first column
+    cols = ["st_id"] + [c for c in df.columns if c != "st_id"]
+    df = df[cols]
+
+    # Format release date column
+    df["release_date"] = pd.to_datetime(df["release_date"], format="%m/%d/%Y", errors="coerce")
+
+    # Fix integer columns
+    integer_cols = ["post_smcra", "surf_mine"]
+    for col in integer_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col].astype(str).str.replace(",", "", regex=False), errors="coerce")
+            df[col] = df[col].astype("Int64")
+
+    # Format date columns
+    date_cols = ["created_date", "last_edit_date", "permit_status_date", "orig_issue", "anniversary", "pe_os_date", "app_date", "issue_date"]
+    for col in date_cols:
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors="coerce")
+
+    # print(df.head(3))
+
+    with engine.begin() as conn:
+        df.to_sql(
+            table_name,
+            con=conn,
+            if_exists="append",
+            index=False,  # avoid stray index column
+            method="multi",
+            chunksize=1000,
+            dtype=va_permit_format_dict,
+        )
+
+    print(f"Data from: {infile} apppended to {table_name}.")
+
+
+def append_to_tn_permits_table_from_local():
+    engine = connect_tcp_socket()
+
+    infile = "~/Documents/full_permit_dataset/tn_permits_final.geojson"
+    state = "tn"
+
+    table_name = "state_permits_" + state
+
+    gdf = gpd.read_file(infile)
+    df = gdf
+    df = df.rename(
+        columns={
+            "geometry": "geom",
+        }
+    )
+
+    # Add a new, SkyTruth ID, which is unique to each record, handles issues where there are multiple records
+    # that share a permit_id.
+    df = df.reset_index(drop=True)
+    df["st_id"] = [f"st_{state}_" + str(i) for i in range(1, len(df) + 1)]
+
+    # Reorder so unique_id is the first column
+    cols = ["st_id"] + [c for c in df.columns if c != "st_id"]
+    df = df[cols]
+
+    # print(df.head(3))
+
+    with engine.begin() as conn:
+        df.to_sql(
+            table_name,
+            con=conn,
+            if_exists="append",
+            index=False,  # avoid stray index column
+            method="multi",
+            chunksize=1000,
+            dtype=tn_permit_format_dict,
+        )
+
+    print(f"Data from: {infile} apppended to {table_name}.")
 
 if __name__ == "__main__":
-    append_to_annual_mining_table_from_local()
-    append_to_annual_mining_table_from_local_directory()
-    append_to_annual_mining_table_from_gcs()
+    # append_to_annual_mining_table_from_local()
+    # append_to_annual_mining_table_from_local_directory()
+    # append_to_annual_mining_table_from_gcs()
     # append_to_highwall_detections_table_from_local()
-    append_to_counties_table_from_local()
-    append_to_huc_table_from_local()
-    append_to_eamlis_table_from_local()
+    # append_to_counties_table_from_local()
+    # append_to_huc_table_from_local()
+    # append_to_eamlis_table_from_local()
+    # append_to_ky_permits_table_from_local()
+    # append_to_wv_permits_table_from_local()
+    append_to_va_permits_table_from_local()
+    # append_to_tn_permits_table_from_local()
