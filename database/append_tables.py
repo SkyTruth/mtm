@@ -195,9 +195,6 @@ def append_to_counties_table_from_local():
 
     infile = "~/Desktop/tl_2025_us_county/tl_2025_us_county_central_appalachia.geojson"
 
-    # Options for d_status are: "final" for fully cleaned products or "provisional" for
-    # partially cleaned products. This is written into the data_status column of the table
-    # during upload.
     table_name = "counties"
 
     gdf = gpd.read_file(infile)
