@@ -437,6 +437,104 @@ def append_to_ky_permits_table_from_local():
     print(f"Data from: {infile} apppended to {table_name}.")
 
 
+def append_to_tn_permits_table_from_local():
+    engine = connect_tcp_socket()
+
+    infile = "~/Documents/full_permit_dataset/tn_permits_final.geojson"
+    state = "tn"
+
+    table_name = "state_permits_" + state
+
+    gdf = gpd.read_file(infile)
+    df = gdf
+    df = df.rename(
+        columns={
+            "geometry": "geom",
+        }
+    )
+
+    # Add a new, SkyTruth ID, which is unique to each record, handles issues where there are multiple records
+    # that share a permit_id.
+    df = df.reset_index(drop=True)
+    df["st_id"] = [f"st_{state}_" + str(i) for i in range(1, len(df) + 1)]
+
+    # Reorder so unique_id is the first column
+    cols = ["st_id"] + [c for c in df.columns if c != "st_id"]
+    df = df[cols]
+
+    # print(df.head(3))
+
+    with engine.begin() as conn:
+        df.to_sql(
+            table_name,
+            con=conn,
+            if_exists="append",
+            index=False,  # avoid stray index column
+            method="multi",
+            chunksize=1000,
+            dtype=tn_permit_format_dict,
+        )
+
+    print(f"Data from: {infile} apppended to {table_name}.")
+
+
+def append_to_va_permits_table_from_local():
+    engine = connect_tcp_socket()
+
+    infile = "~/Documents/full_permit_dataset/va_permits_final.geojson"
+    state = "va"
+
+    table_name = "state_permits_" + state
+
+    gdf = gpd.read_file(infile)
+    df = gdf
+    df = df.rename(
+        columns={
+            "geometry": "geom",
+        }
+    )
+
+    # Add a new, SkyTruth ID, which is unique to each record, handles issues where there are multiple records
+    # that share a permit_id.
+    df = df.reset_index(drop=True)
+    df["st_id"] = [f"st_{state}_" + str(i) for i in range(1, len(df) + 1)]
+
+    # Reorder so unique_id is the first column
+    cols = ["st_id"] + [c for c in df.columns if c != "st_id"]
+    df = df[cols]
+
+    # Format release date column
+    df["release_date"] = pd.to_datetime(df["release_date"], format="%m/%d/%Y", errors="coerce")
+
+    # Fix integer columns
+    integer_cols = ["post_smcra", "surf_mine"]
+    for col in integer_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col].astype(str).str.replace(",", "", regex=False), errors="coerce")
+            df[col] = df[col].astype("Int64")
+
+    # Format date columns
+    date_cols = ["created_date", "last_edit_date", "permit_status_date", "orig_issue", "anniversary", "pe_os_date", "app_date", "issue_date"]
+    for col in date_cols:
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors="coerce")
+
+    # print(df.head(3))
+
+    with engine.begin() as conn:
+        df.to_sql(
+            table_name,
+            con=conn,
+            if_exists="append",
+            index=False,  # avoid stray index column
+            method="multi",
+            chunksize=1000,
+            dtype=va_permit_format_dict,
+        )
+
+    print(f"Data from: {infile} apppended to {table_name}.")
+
+
 def append_to_wv_permits_table_from_local():
     engine = connect_tcp_socket()
 
@@ -503,103 +601,6 @@ def append_to_wv_permits_table_from_local():
 
     print(f"Data from: {infile} apppended to {table_name}.")
 
-
-def append_to_va_permits_table_from_local():
-    engine = connect_tcp_socket()
-
-    infile = "~/Documents/full_permit_dataset/va_permits_final.geojson"
-    state = "va"
-
-    table_name = "state_permits_" + state
-
-    gdf = gpd.read_file(infile)
-    df = gdf
-    df = df.rename(
-        columns={
-            "geometry": "geom",
-        }
-    )
-
-    # Add a new, SkyTruth ID, which is unique to each record, handles issues where there are multiple records
-    # that share a permit_id.
-    df = df.reset_index(drop=True)
-    df["st_id"] = [f"st_{state}_" + str(i) for i in range(1, len(df) + 1)]
-
-    # Reorder so unique_id is the first column
-    cols = ["st_id"] + [c for c in df.columns if c != "st_id"]
-    df = df[cols]
-
-    # Format release date column
-    df["release_date"] = pd.to_datetime(df["release_date"], format="%m/%d/%Y", errors="coerce")
-
-    # Fix integer columns
-    integer_cols = ["post_smcra", "surf_mine"]
-    for col in integer_cols:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col].astype(str).str.replace(",", "", regex=False), errors="coerce")
-            df[col] = df[col].astype("Int64")
-
-    # Format date columns
-    date_cols = ["created_date", "last_edit_date", "permit_status_date", "orig_issue", "anniversary", "pe_os_date", "app_date", "issue_date"]
-    for col in date_cols:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], errors="coerce")
-
-    # print(df.head(3))
-
-    with engine.begin() as conn:
-        df.to_sql(
-            table_name,
-            con=conn,
-            if_exists="append",
-            index=False,  # avoid stray index column
-            method="multi",
-            chunksize=1000,
-            dtype=va_permit_format_dict,
-        )
-
-    print(f"Data from: {infile} apppended to {table_name}.")
-
-
-def append_to_tn_permits_table_from_local():
-    engine = connect_tcp_socket()
-
-    infile = "~/Documents/full_permit_dataset/tn_permits_final.geojson"
-    state = "tn"
-
-    table_name = "state_permits_" + state
-
-    gdf = gpd.read_file(infile)
-    df = gdf
-    df = df.rename(
-        columns={
-            "geometry": "geom",
-        }
-    )
-
-    # Add a new, SkyTruth ID, which is unique to each record, handles issues where there are multiple records
-    # that share a permit_id.
-    df = df.reset_index(drop=True)
-    df["st_id"] = [f"st_{state}_" + str(i) for i in range(1, len(df) + 1)]
-
-    # Reorder so unique_id is the first column
-    cols = ["st_id"] + [c for c in df.columns if c != "st_id"]
-    df = df[cols]
-
-    # print(df.head(3))
-
-    with engine.begin() as conn:
-        df.to_sql(
-            table_name,
-            con=conn,
-            if_exists="append",
-            index=False,  # avoid stray index column
-            method="multi",
-            chunksize=1000,
-            dtype=tn_permit_format_dict,
-        )
-
-    print(f"Data from: {infile} apppended to {table_name}.")
 
 if __name__ == "__main__":
     append_to_annual_mining_table_from_local()
