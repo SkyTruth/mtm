@@ -30,4 +30,4 @@ poetry run python database/append_tables.py
 ```
 
 # API Guide
-This colab notebook: [MTM Test API Guide v2.ipynb](https://colab.research.google.com/drive/1eWf8Fsr_-NgXM_YyI-WSHIWejfhToXDp#scrollTo=381wUU-Na6WM) provides examples of how to interact with the API.
+This colab notebook: [Mining API Guide.ipynb](https://colab.research.google.com/drive/1Dfk0izAuUt7CpNHgEt56hQZfjUaWNbHM#scrollTo=LHFoaSEnl-Uo) provides examples of how to interact with the API.
