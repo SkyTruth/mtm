@@ -8,6 +8,7 @@ data/tmp/
 config.py
 mask_log.txt
 ToDo.txt
+data/highwalls/inputs/*
 data/highwalls/temps/*
 data/highwalls/outputs/*
 .DS_Store
