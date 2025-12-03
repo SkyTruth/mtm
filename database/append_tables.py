@@ -581,6 +581,12 @@ def append_to_wv_permits_table_from_local():
         if col in df.columns:
             df[col] = pd.to_datetime(df[col], errors="coerce")
 
+    # Replace -999 values with null
+    acres_cols = ["acres_dist", "acres_recl"]
+    for col in acres_cols:
+        if col in df.columns:
+            df[col] = df[col].replace(-999, pd.NA)
+
     # print(df.head(3))
 
     with engine.begin() as conn:
