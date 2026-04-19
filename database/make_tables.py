@@ -94,6 +94,39 @@ def create_highwall_detections_table():
         print(f"Successfully created table: {table_name}.")
 
 
+def create_cuts_fills_table():
+    engine = connect_tcp_socket()
+    table_name = "cuts_fills"
+
+    # SQL statement for creating table
+    create_table_sql = f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            st_id                INT PRIMARY KEY,
+            type                 TEXT,
+            area_m2              DOUBLE PRECISION,
+            volume_m3            DOUBLE PRECISION,
+            elev_post_min        DOUBLE PRECISION,
+            elev_pre_min         DOUBLE PRECISION,
+            elev_change_min      DOUBLE PRECISION,
+            elev_post_max        DOUBLE PRECISION,
+            elev_pre_max         DOUBLE PRECISION,
+            elev_change_max      DOUBLE PRECISION,
+            elev_post_med        DOUBLE PRECISION,
+            elev_pre_med         DOUBLE PRECISION,
+            elev_change_med      DOUBLE PRECISION,
+            slope_post_med       DOUBLE PRECISION,
+            slope_pre_med        DOUBLE PRECISION,
+            slope_change_med     DOUBLE PRECISION,
+            geom                 geometry(MultiPolygon, 4326)
+        );
+    """
+
+    with engine.connect() as conn:
+        conn.execute(sqlalchemy.text(create_table_sql))
+        conn.commit()
+        print(f"Successfully created table: {table_name}.")
+
+
 def create_counties_table():
     engine = connect_tcp_socket()
     table_name = "counties"
@@ -503,6 +536,7 @@ def create_wv_permits_table():
 if __name__ == "__main__":
     create_annual_mining_table()
     create_highwall_detections_table()
+    create_cuts_fills_table()
     create_counties_table()
     create_huc_table()
     create_eamlis_table()
