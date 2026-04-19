@@ -12,7 +12,7 @@ jobs
 ```
 
 # Prepare the database
-This will ensure the postgis extension is enabled
+This will ensure the postgis extension is enabled. This step only needs to be run when first setting up the database.
 ```shell
 poetry run python database/prepare_db.py
 ```
