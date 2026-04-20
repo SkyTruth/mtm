@@ -5,8 +5,8 @@ library(dplyr)
 #------------------------------------------------------------------------------
 
 # Define directory paths
-cleaned_dir <- "cleaned"
-results_dir <- "results"
+cleaned_dir <- "Highwall_Detection/data_analysis/cleaned"
+results_dir <- "Highwall_Detection/data_analysis/results"
 
 # Load dataframes
 segments <- read.csv(file.path(cleaned_dir, "segments.csv"))

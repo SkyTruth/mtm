@@ -6,8 +6,8 @@ library(ggplot2)
 #------------------------------------------------------------------------------
 
 # Define directory paths
-cleaned_dir <- "cleaned"
-figures_dir <- "figures"
+cleaned_dir <- "Highwall_Detection/data_analysis/cleaned"
+figures_dir <- "Highwall_Detection/data_analysis/figures"
 
 # Load dataframes
 segments <- read.csv(file.path(cleaned_dir, "segments.csv"))
@@ -39,10 +39,10 @@ cost_by_rec_status <- ggplot(segments, aes(x = Mid_Cost/1000000, y = State, fill
   ) +
   theme_minimal() +
   theme(
-    axis.text.x.bottom = element_text(size = 12),
+    axis.text.x.bottom = element_text(size = 14),
     axis.title.x.bottom = element_text(
       face = "bold",
-      size = 14,
+      size = 16,
       color = "black",
       margin = margin(t = 14, r = 0, b = 0, l = 0, unit = "pt")
     ),
@@ -50,7 +50,7 @@ cost_by_rec_status <- ggplot(segments, aes(x = Mid_Cost/1000000, y = State, fill
     axis.line.y = element_line(size=0.4, color="black"),
     axis.ticks.y.left = element_blank(),
     axis.text.y.left = element_text(
-      size = 12,
+      size = 16,
       face = "bold",
       color = "black",
       hjust = 1,
@@ -62,8 +62,8 @@ cost_by_rec_status <- ggplot(segments, aes(x = Mid_Cost/1000000, y = State, fill
     panel.grid.minor.x=element_blank(),
     panel.grid.major.x=element_line(color="black", size=0.1058),
 
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    legend.text = element_text(size = 16),
+    legend.title = element_text(size = 16, face = "bold", hjust = 0.5),
     legend.title.align = 0.5,
     legend.position = "inside",
     legend.position.inside = c(0.95, 0.97),
@@ -124,10 +124,10 @@ cost_by_bond_status <- ggplot(all_permits, aes(x = Highwall_Cost_Mid/1000000, y 
   ) +
   theme_minimal() +
   theme(
-    axis.text.x.bottom = element_text(size = 12),
+    axis.text.x.bottom = element_text(size = 14),
     axis.title.x.bottom = element_text(
       face = "bold",
-      size = 14,
+      size = 16,
       color = "black",
       margin = margin(t = 14, r = 0, b = 0, l = 0, unit = "pt")
     ),
@@ -135,7 +135,7 @@ cost_by_bond_status <- ggplot(all_permits, aes(x = Highwall_Cost_Mid/1000000, y 
     axis.line.y = element_line(size=0.4, color="black"),
     axis.ticks.y.left = element_blank(),
     axis.text.y.left = element_text(
-      size = 12,
+      size = 16,
       face = "bold",
       color = "black",
       hjust = 1,
@@ -147,8 +147,8 @@ cost_by_bond_status <- ggplot(all_permits, aes(x = Highwall_Cost_Mid/1000000, y 
     panel.grid.minor.x=element_blank(),
     panel.grid.major.x=element_line(color="black", size=0.1058),
 
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    legend.text = element_text(size = 16),
+    legend.title = element_text(size = 16, face = "bold", hjust = 0.5),
     legend.title.align = 0.5,
     legend.position = "inside",
     legend.position.inside = c(0.95, 0.97),
@@ -202,10 +202,10 @@ deficit_by_bond_status <- ggplot(all_permits %>% filter(Mid_Deficit > 0), aes(x 
   ) +
   theme_minimal() +
   theme(
-    axis.text.x.bottom = element_text(size = 12),
+    axis.text.x.bottom = element_text(size = 14),
     axis.title.x.bottom = element_text(
       face = "bold",
-      size = 14,
+      size = 16,
       color = "black",
       margin = margin(t = 14, r = 0, b = 0, l = 0, unit = "pt")
     ),
@@ -213,7 +213,7 @@ deficit_by_bond_status <- ggplot(all_permits %>% filter(Mid_Deficit > 0), aes(x 
     axis.line.y = element_line(size=0.4, color="black"),
     axis.ticks.y.left = element_blank(),
     axis.text.y.left = element_text(
-      size = 12,
+      size = 16,
       face = "bold",
       color = "black",
       hjust = 1,
@@ -225,8 +225,8 @@ deficit_by_bond_status <- ggplot(all_permits %>% filter(Mid_Deficit > 0), aes(x 
     panel.grid.minor.x=element_blank(),
     panel.grid.major.x=element_line(color="black", size=0.1058),
 
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    legend.text = element_text(size = 16),
+    legend.title = element_text(size = 16, face = "bold", hjust = 0.5),
     legend.title.align = 0.5,
     legend.position = "inside",
     legend.position.inside = c(0.95, 0.97),

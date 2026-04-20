@@ -5,7 +5,7 @@ library(dplyr)
 #------------------------------------------------------------------------------
 
 # Define directory paths
-cleaned_dir <- "cleaned"
+cleaned_dir <- "Highwall_Detection/data_analysis/cleaned"
 
 # Load dataframes
 all_permits <- read.csv(file.path(cleaned_dir, "all_permits.csv"))
