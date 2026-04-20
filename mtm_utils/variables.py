@@ -215,6 +215,26 @@ highwall_detection_format_dict = {
     "geom": Geometry("MultiPolygon", srid=4326),
 }
 
+cuts_fills_format_dict = {
+    "st_id": INTEGER(),
+    "type": TEXT(),
+    "area_m2": DOUBLE_PRECISION(),
+    "volume_m3": DOUBLE_PRECISION(),
+    "elev_post_min": DOUBLE_PRECISION(),
+    "elev_pre_min": DOUBLE_PRECISION(),
+    "elev_change_min": DOUBLE_PRECISION(),
+    "elev_post_max": DOUBLE_PRECISION(),
+    "elev_pre_max": DOUBLE_PRECISION(),
+    "elev_change_max": DOUBLE_PRECISION(),
+    "elev_post_med": DOUBLE_PRECISION(),
+    "elev_pre_med": DOUBLE_PRECISION(),
+    "elev_change_med": DOUBLE_PRECISION(),
+    "slope_post_med": DOUBLE_PRECISION(),
+    "slope_pre_med": DOUBLE_PRECISION(),
+    "slope_change_med": DOUBLE_PRECISION(),
+    "geom": Geometry("MultiPolygon", srid=4326),
+}
+
 counties_format_dict = {
     "geoid": INTEGER(),
     "statefp": INTEGER(),

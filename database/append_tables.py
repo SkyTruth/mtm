@@ -10,6 +10,7 @@ from mtm_utils.variables import (
     annual_mining_input_directory,
     annual_mining_format_dict,
     highwall_detection_format_dict,
+    cuts_fills_format_dict,
     counties_format_dict,
     ky_permit_format_dict,
     wv_permit_format_dict,
@@ -187,6 +188,38 @@ def append_to_annual_mining_table_from_gcs():
         )
     print(f"Data from: {infile} apppended to {table_name}.")
 """
+
+
+def append_to_cuts_fills_table_from_gcs():
+    infile = "topo_analysis/mtm_cuts_fills.geojson"
+    table_name = "cuts_fills"
+    
+    # Connect to Google Cloud Storage (GCS)
+    storage_client = storage.Client()
+    bucket_name = GCLOUD_BUCKET
+    storage_bucket = storage_client.bucket(bucket_name)
+    engine = connect_tcp_socket()
+
+    # Read from GCS
+    blob = storage_bucket.blob(infile)
+    blob_string = blob.download_as_string().decode("utf-8")
+    geojson_data = json.loads(blob_string)
+    gdf = gpd.GeoDataFrame.from_features(geojson_data["features"])
+    gdf = gdf.rename(columns={"geometry": "geom"})
+
+    # Save to SQL database
+    with engine.begin() as conn:
+        gdf.to_sql(
+            table_name,
+            con=conn,
+            if_exists="append",
+            index=False,  # avoid stray index column
+            method="multi",
+            chunksize=1000,
+            dtype=cuts_fills_format_dict,
+        )
+    print(f"Data from: {infile} apppended to {table_name}.")
+
 
 def append_to_counties_table_from_local():
     engine = connect_tcp_socket()
@@ -608,6 +641,7 @@ if __name__ == "__main__":
     append_to_annual_mining_table_from_local_directory()
     append_to_annual_mining_table_from_gcs()
     # append_to_highwall_detections_table_from_local()
+    append_to_cuts_fills_table_from_gcs()
     append_to_counties_table_from_local()
     append_to_huc_table_from_local()
     append_to_eamlis_table_from_local()
