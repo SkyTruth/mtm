@@ -75,7 +75,7 @@ cost_by_rec_status <- ggplot(segments, aes(x = Mid_Cost/1000000, y = State, fill
   ) +
   guides(fill = guide_legend(reverse = TRUE, ncol = 1))
 
-# ggsave(file.path(figures_dir, "cost_by_rec_status.png"), cost_by_rec_status, width = 12, height = 6, dpi = 300)
+# ggsave(file.path(figures_dir, "Figure_5.png"), cost_by_rec_status, width = 12, height = 6, dpi = 300)
 
 cost_by_rec_status_table <- highwalls %>%
   group_by(State) %>%
@@ -160,7 +160,7 @@ cost_by_bond_status <- ggplot(all_permits, aes(x = Highwall_Cost_Mid/1000000, y 
   ) +
   guides(fill = guide_legend(reverse = TRUE, ncol = 1))
 
-# ggsave(file.path(figures_dir, "cost_by_bond_status.png"), cost_by_bond_status, width = 12, height = 6, dpi = 300)
+# ggsave(file.path(figures_dir, "Figure_6.png"), cost_by_bond_status, width = 12, height = 6, dpi = 300)
 
 # In each state, most costs are for bonded permits.
 # Kentucky and Virginia have high proportions of released highwall costs.
@@ -238,7 +238,7 @@ deficit_by_bond_status <- ggplot(all_permits %>% filter(Mid_Deficit > 0), aes(x 
   ) +
   guides(fill = guide_legend(reverse = TRUE, ncol = 1))
 
-# ggsave(file.path(figures_dir, "deficit_by_bond_status.png"), deficit_by_bond_status, width = 12, height = 6, dpi = 300)
+# ggsave(file.path(figures_dir, "Figure_7.png"), deficit_by_bond_status, width = 12, height = 6, dpi = 300)
 
 
 #------------------------------------------------------------------------------
