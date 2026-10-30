@@ -31,6 +31,7 @@ dependencies = [
     "cloud-sql-python-connector[pg8000]>=1.18.4,<2",
     "sqlalchemy>=2.0.43,<3",
     "geoalchemy2>=0.18.0,<0.19",
+    "pyarrow>=26.0.0",
 ]
 
 [tool.uv]
