@@ -1,6 +1,12 @@
 # Moutaintop Removal Mining
 This repository contains code, data, and documentation for SkyTruth's Mountaintop Removal Mining (MTM) related work. 
 
+This project is primarily Python based, and uses [uv](https://docs.astral.sh/uv/) as its default Python environment manager. The checked-in environment contract is `pyproject.toml`, `uv.lock`, and `.python-version`. There are some Javascript codes included, written using the [Google Earth Engine Code Editor](https://code.earthengine.google.com/), and intended to be run in the same. 
+
+The repo also uses Google Cloud Platform resources (Google Cloud Storage) in this repo. Instructions on getting set up are [here](#google-cloud-platform-gcp).
+
+There are a variety of sub-projects under the broader MTM program, each project has a separate directory which contains the documentation relevant to that work. Projects are outlined broadly in [Repository Layout](#repository-layout), below, please see specific ReadMe files in each directory for additional information
+
 ## Repository Directories
 - **MTM2009_Archive** : Data and documentaion related to the 2009 SkyTruth Decadal mine detection model
 - **MTM2018_Archive** : Code, data, and documentaion related to the 2018 paper ["Mapping the yearly extent of surface coal mining in Central Appalachia using Landsat and Google Earth Engine"](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0197758), published in PLOS One, which identified mines at annual intervals from 1985 - 2015.
@@ -11,20 +17,12 @@ This repository contains code, data, and documentation for SkyTruth's Mountainto
 - **data** : key datasets utilized across MTM projects
 - **utils** : General purpose code which is project agnostic 
 
-# Working in this repo:
-  - This repo is primarily Python-based (Python 3.13) and is set up with [uv](https://docs.astral.sh/uv/), which installs Python for you. Learn how to set up and use uv in [this](#uv-installation-and-set-up) section.
-    - There are some Javascript codes included, written using the [Google Earth Engine Code Editor](https://code.earthengine.google.com/), and intended to be run in the same.
-  - We use Google Cloud Platform resources (Google Cloud Storage) in this repo. Instructions on getting set up are [here](#google-cloud-platform-gcp)
-  - In this repo we use [pre-commit-hooks](#pre-commit-hooks)
-  - Git/GitHub instructions are found in this [repo](https://github.com/SkyTruth/github_practice)
-  - In this repo, each MTM related project has a separate directory which contains documentation about the project. Projects are outlined broadly in [Repository Layout](#repository-layout), please see specific ReadMe files in each directory for additional information
 
-
-# uv Installation and Set-up
-You do not need to install Python first: uv downloads the Python version this repo uses (pinned in `.python-version`) the first time you sync.
+# uv: Installation and Set-up
+`uv` downloads the Python version used by this repo (and pins it in `.python-version`) the first time you sync.
 
 ## Mac / Linux
-1. [Install uv](https://docs.astral.sh/uv/getting-started/installation/), either with Homebrew:
+1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/), either with Homebrew:
   ```shell
   brew install uv
   ```
@@ -44,9 +42,9 @@ You do not need to install Python first: uv downloads the Python version this re
 
 ## Using uv
 ### Working in the uv environment
-This repo already has a `pyproject.toml` and a `uv.lock` file. These define the virtual environment (sort of like how requirements.txt defines a pip environment, but these files resolve dependencies and ensure everyone has the same dependencies, since those are defined in the lockfile). uv creates the environment in a `.venv` folder at the root of the repo.
+This repo has a `pyproject.toml` and a `uv.lock` file. These define the virtual environment. uv creates the environment in a `.venv` folder at the root of the repo.
 
-To work in the uv virtual environment, you just need to prepend all command line statements with uv run (i.e. instead of `python hello_world.py` you would simply run `uv run python hello_world.py`). `uv run` also installs anything that is missing or out of date before running.
+To work in the uv virtual environment, prepend all command line statements with uv run (i.e. instead of `python hello_world.py` you would run `uv run python hello_world.py`). `uv run` also installs anything that is missing or out of date before running.
 
 Alternatively, you can work entirely in the environment (similar to `conda activate`) by activating it with `source .venv/bin/activate` (Mac / Linux) or `.venv\Scripts\activate` (Windows), and then you can just run `python hello_world.py`
 
