@@ -13,9 +13,9 @@ uv run python MTM_Annual_Extent/code/mask_creation.py
 uv run python MTM_Annual_Extent/code/greenestComp.py
 ```
 
-2. annualThresholdImages.py.py --> creates annual threshold images and exports them to GCS.
+2. annualThresholdImages.py --> creates annual threshold images and exports them to GCS.
 ```shell
-uv run python MTM_Annual_Extent/code/annualThresholdImages.py.py
+uv run python MTM_Annual_Extent/code/annualThresholdImages.py
 ```
 
 3. annualMiningArea.py --> creates annual mining footprint rasters and exports them to GCS.
