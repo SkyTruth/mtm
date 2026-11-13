@@ -5,9 +5,9 @@ This project is primarily Python based, and uses [uv](https://docs.astral.sh/uv/
 
 The repo also uses Google Cloud Platform resources (Google Cloud Storage) in this repo. Instructions on getting set up are [here](#google-cloud-platform-gcp).
 
-There are a variety of sub-projects under the broader MTM program, each project has a separate directory which contains the documentation relevant to that work. Projects are outlined broadly in [Repository Layout](#repository-layout), below, please see specific ReadMe files in each directory for additional information
+There are a variety of sub-projects under the broader MTM program, each project has a separate directory which contains the documentation relevant to that work. Projects are outlined broadly in [Repository Directories](#repository-directories), below, please see specific ReadMe files in each directory for additional information
 
-## Repository Directories
+# Repository Directories
 - **MTM2009_Archive** : Data and documentaion related to the 2009 SkyTruth Decadal mine detection model
 - **MTM2018_Archive** : Code, data, and documentaion related to the 2018 paper ["Mapping the yearly extent of surface coal mining in Central Appalachia using Landsat and Google Earth Engine"](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0197758), published in PLOS One, which identified mines at annual intervals from 1985 - 2015.
 - **MTM_Annual_Mining** : Code, data, and documentaion related to the current version of SkyTruth's Annual mine detection model; which is run annually and has been updated from the code in MTM2018_Archive
@@ -65,6 +65,35 @@ Deleting a library
   ```shell
   uv remove <old-package>
   ```
+
+# Google Cloud Platform (GCP)
+Most scripts read from and write to the `mountaintop_mining` Cloud Storage bucket in the `skytruth-tech` project, and the Earth Engine scripts use a service account. You need GCP permissions on `skytruth-tech` before setting this up.
+
+## Install and log in
+1. Install the Google Cloud CLI by following the instructions for your operating system in the [SDK documentation](https://cloud.google.com/sdk/docs/install-sdk).
+2. Run:
+   ```shell
+   gcloud init
+   ```
+   This opens a browser to log in. Back in the terminal, choose `skytruth-tech` as the project.
+3. Create the credentials file that Python scripts use to access Cloud Storage:
+   ```shell
+   gcloud auth application-default login
+   ```
+   This login expires periodically. If a script fails with `Reauthentication failed`, run the command again.
+4. Check that you can see the bucket:
+   ```shell
+   gcloud storage ls gs://mountaintop_mining/
+   ```
+
+## Earth Engine service account
+Scripts that use Earth Engine sign in with a service account key, not your personal login. Ask a team member for help setting up config files.
+
+Both are gitignored. Never commit them.
+
+## Project-specific tools
+- **Canopy_Height** mounts the bucket with [gcsfuse](https://cloud.google.com/storage/docs/gcsfuse-install). See `Canopy_Height/README.md`.
+- **database** connects through the Cloud SQL Auth Proxy. See `database/README.md`.
 
 # License
 This work is licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0). See LICENSE.txt
