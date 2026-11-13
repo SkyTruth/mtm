@@ -67,17 +67,33 @@ Deleting a library
   ```
 
 # Google Cloud Platform (GCP)
-- Once you have been given google cloud permissions, we have to set up google-cloud-sdk (a collection of tools to interface with GCP) to be able to access resources through command line or python scripts
-- Install google-cloud-sdk following the instructions under the correct operating systems tab in the [SDK documentation](https://cloud.google.com/sdk/docs/install-sdk)
-- Once installed, run:
-```shell
-gcloud init
-```
-which will prompt you to login to your google account (make sure to select your skytruth account) through your browser. When you are logged in, return to your terminal (or Powershell) and there will be some questions to respond to. The project we are working in is "skytruth-tech".
-- Then we need to authenticate, which will build authentication an key file (this is necessary for command line or other applications to interface with google-cloud)
-```shell
-gcloud auth application-default login
-```
+Most scripts read from and write to the `mountaintop_mining` Cloud Storage bucket in the `skytruth-tech` project, and the Earth Engine scripts use a service account. You need GCP permissions on `skytruth-tech` before setting this up.
+
+## Install and log in
+1. Install the Google Cloud CLI by following the instructions for your operating system in the [SDK documentation](https://cloud.google.com/sdk/docs/install-sdk).
+2. Run:
+   ```shell
+   gcloud init
+   ```
+   This opens a browser to log in. Back in the terminal, choose `skytruth-tech` as the project.
+3. Create the credentials file that Python scripts use to access Cloud Storage:
+   ```shell
+   gcloud auth application-default login
+   ```
+   This login expires periodically. If a script fails with `Reauthentication failed`, run the command again.
+4. Check that you can see the bucket:
+   ```shell
+   gcloud storage ls gs://mountaintop_mining/
+   ```
+
+## Earth Engine service account
+Scripts that use Earth Engine sign in with a service account key, not your personal login. Ask a team member for help setting up config files.
+
+Both are gitignored. Never commit them.
+
+## Project-specific tools
+- **Canopy_Height** mounts the bucket with [gcsfuse](https://cloud.google.com/storage/docs/gcsfuse-install). See `Canopy_Height/README.md`.
+- **database** connects through the Cloud SQL Auth Proxy. See `database/README.md`.
 
 # License
 This work is licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0). See LICENSE.txt
