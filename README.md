@@ -5,9 +5,9 @@ This project is primarily Python based, and uses [uv](https://docs.astral.sh/uv/
 
 The repo also uses Google Cloud Platform resources (Google Cloud Storage) in this repo. Instructions on getting set up are [here](#google-cloud-platform-gcp).
 
-There are a variety of sub-projects under the broader MTM program, each project has a separate directory which contains the documentation relevant to that work. Projects are outlined broadly in [Repository Layout](#repository-layout), below, please see specific ReadMe files in each directory for additional information
+There are a variety of sub-projects under the broader MTM program, each project has a separate directory which contains the documentation relevant to that work. Projects are outlined broadly in [Repository Directories](#repository-directories), below, please see specific ReadMe files in each directory for additional information
 
-## Repository Directories
+# Repository Directories
 - **MTM2009_Archive** : Data and documentaion related to the 2009 SkyTruth Decadal mine detection model
 - **MTM2018_Archive** : Code, data, and documentaion related to the 2018 paper ["Mapping the yearly extent of surface coal mining in Central Appalachia using Landsat and Google Earth Engine"](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0197758), published in PLOS One, which identified mines at annual intervals from 1985 - 2015.
 - **MTM_Annual_Mining** : Code, data, and documentaion related to the current version of SkyTruth's Annual mine detection model; which is run annually and has been updated from the code in MTM2018_Archive
@@ -65,6 +65,19 @@ Deleting a library
   ```shell
   uv remove <old-package>
   ```
+
+# Google Cloud Platform (GCP)
+- Once you have been given google cloud permissions, we have to set up google-cloud-sdk (a collection of tools to interface with GCP) to be able to access resources through command line or python scripts
+- Install google-cloud-sdk following the instructions under the correct operating systems tab in the [SDK documentation](https://cloud.google.com/sdk/docs/install-sdk)
+- Once installed, run:
+```shell
+gcloud init
+```
+which will prompt you to login to your google account (make sure to select your skytruth account) through your browser. When you are logged in, return to your terminal (or Powershell) and there will be some questions to respond to. The project we are working in is "skytruth-tech".
+- Then we need to authenticate, which will build authentication an key file (this is necessary for command line or other applications to interface with google-cloud)
+```shell
+gcloud auth application-default login
+```
 
 # License
 This work is licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0). See LICENSE.txt
