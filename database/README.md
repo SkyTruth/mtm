@@ -14,19 +14,19 @@ jobs
 # Prepare the database
 This will ensure the postgis extension is enabled. This step only needs to be run when first setting up the database.
 ```shell
-poetry run python database/prepare_db.py
+uv run python database/prepare_db.py
 ```
 
 # Creating Tables
 This will create all tables, if they do not already exist.
 ```shell
-poetry run python database/make_tables.py
+uv run python database/make_tables.py
 ```
 
 # Append data to tables
 This code is currently only able to write data from local files, or a GCS file path to an existing, annual mining table.
 ```shell
-poetry run python database/append_tables.py
+uv run python database/append_tables.py
 ```
 
 # API Guide
