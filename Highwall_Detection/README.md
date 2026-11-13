@@ -4,7 +4,7 @@ All code should be run from the `mtm/` directory.
 # Highwall Skeletonization
 **centerline_segments.py** --> Reduces highwall geometries into centerlines, split at their junctions into individual branches. Divides longer branches into shorter segments.
 ```shell
-poetry run python Highwall_Detection/code/centerline_segments.py
+uv run python Highwall_Detection/code/centerline_segments.py
 ```
 # Data Analysis
 **data_clean.R** --> Cleans highwall datasets into analysis-ready dataframes and calculates additional attributes. Cleaned data is saved in `data_analysis/cleaned/`.

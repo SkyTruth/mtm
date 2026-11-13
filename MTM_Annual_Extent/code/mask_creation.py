@@ -1,13 +1,16 @@
 import os
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import pandas as pd
 import geopandas as gpd
-import glob
 from google.cloud import storage
 import requests
-import wget
-from zipfile import ZipFile
-from osgeo import gdal, ogr, osr
-
+import numpy as np
+import rasterio
+from rasterio import features
+from rasterio.transform import from_origin
+from rasterio.warp import calculate_default_transform, reproject, Resampling
+from rasterio.windows import Window, bounds as window_bounds
+from shapely.geometry import box
 
 from mtm_utils.variables import (
     PROCESSING_YEAR,
@@ -15,12 +18,8 @@ from mtm_utils.variables import (
     MASK_INTERIM,
     MASK_FINAL,
     FIPS_CODES,
-    STUDY_AREA_GJS,
-    STUDY_AREA_SHP,
     STUDY_AREA_ZIP,
     USCB_YEAR,
-    USCB_GJS,
-    USCB_SHP,
     USCB_ZIP,
     GCLOUD_BUCKET,
     GCLOUD_MASK_DIR,
@@ -30,15 +29,27 @@ from mtm_utils.variables import (
 
 
 def url_exists(url):
-    response = requests.head(url)
-    return response.status_code == 200
+    return requests.head(url, timeout=30).status_code == 200
+
+
+def fetch(url, out_dir=USCB_ZIP):
+    # Skip files already downloaded; write to .part first so an interrupted download isn't kept
+    dest = out_dir + url.rsplit("/", 1)[-1]
+    if os.path.exists(dest):
+        return dest
+    tmp = dest + ".part"
+    with requests.get(url, stream=True, timeout=120) as r:
+        r.raise_for_status()
+        with open(tmp, "wb") as f:
+            for chunk in r.iter_content(chunk_size=1 << 20):
+                f.write(chunk)
+    os.replace(tmp, dest)
+    return dest
 
 
 def data_dir_creation():
     # Check if Data Directories exist for USCB data for PROCESSING_YEAR, and making them if they do not
     os.makedirs(USCB_YEAR, exist_ok=True)
-    os.makedirs(USCB_GJS, exist_ok=True)
-    os.makedirs(USCB_SHP, exist_ok=True)
     os.makedirs(USCB_ZIP, exist_ok=True)
 
     # Check if Data Directories exist for Mask Directories data for PROCESSING_YEAR, and making them if they do not
@@ -51,281 +62,169 @@ def data_download():
     print(
         f"Beginning the MTM Mask creation process; downloading data from the USCB for the year {PROCESSING_YEAR}."
     )
-    max_fips_codes = len(FIPS_CODES)
+    base = f"https://www2.census.gov/geo/tiger/TIGER{PROCESSING_YEAR}"
 
     """
     Download USCB data for Area water, linear water, and roads.
     """
-    print("     > Downloading Roads, Area Water, and Linear Water data...")
-    for i in range(max_fips_codes):
-        # Define file names using processing year and FIPS codes
-        roads_file = f"tl_{PROCESSING_YEAR}_{FIPS_CODES[i]}_roads.zip"
-        areaW_file = f"tl_{PROCESSING_YEAR}_{FIPS_CODES[i]}_areawater.zip"
-        lineW_file = f"tl_{PROCESSING_YEAR}_{FIPS_CODES[i]}_linearwater.zip"
-
-        # Define the URLs for the data stored by USCB for download
-        rd_url = f"https://www2.census.gov/geo/tiger/TIGER{PROCESSING_YEAR}/ROADS/{roads_file}"
-        aw_url = f"https://www2.census.gov/geo/tiger/TIGER{PROCESSING_YEAR}/AREAWATER/{areaW_file}"
-        lw_url = f"https://www2.census.gov/geo/tiger/TIGER{PROCESSING_YEAR}/LINEARWATER/{lineW_file}"
-
-        # Download the data from USCB
-        wget.download(rd_url, out=USCB_ZIP)
-        wget.download(aw_url, out=USCB_ZIP)
-        wget.download(lw_url, out=USCB_ZIP)
-    print("     > Done")
+    urls = [
+        f"{base}/{folder}/tl_{PROCESSING_YEAR}_{fips}_{layer}.zip"
+        for fips in FIPS_CODES
+        for folder, layer in (
+            ("ROADS", "roads"),
+            ("AREAWATER", "areawater"),
+            ("LINEARWATER", "linearwater"),
+        )
+    ]
 
     """
     Download USCB data for Urban Areas data. Check to see if data using the 2010 UAC is available for the current year,
     which included smaller areas called urban clusters, and if it is not available, download it from 2022 which is a
     year where it is known to be provided.
     """
-    print("     > Downloading Urban Areas data...")
-    uac_url = f"https://www2.census.gov/geo/tiger/TIGER{PROCESSING_YEAR}/UAC20/tl_{PROCESSING_YEAR}_us_uac20.zip"
-    # https://www2.census.gov/geo/tiger/TIGER2024/UAC20/tl_2024_us_uac20.zip
-    uac_10_url = f"https://www2.census.gov/geo/tiger/TIGER{PROCESSING_YEAR}/UAC/tl_{PROCESSING_YEAR}_us_uac10.zip"
-
-    # Check if the UAC is listed as UAC or UAC20
-    if url_exists(uac_url):
-        print(f"URL Exists: {uac_url}")
-        wget.download(uac_url, out=USCB_ZIP)
-        print("     > Done")
-    else:
-        uac_url = f"https://www2.census.gov/geo/tiger/TIGER{PROCESSING_YEAR}/UAC/tl_{PROCESSING_YEAR}_us_uac20.zip"
-        wget.download(uac_url, out=USCB_ZIP)
+    uac_url = f"{base}/UAC20/tl_{PROCESSING_YEAR}_us_uac20.zip"
+    if not url_exists(uac_url):
+        uac_url = f"{base}/UAC/tl_{PROCESSING_YEAR}_us_uac20.zip"
         print(f"     > UAC for {PROCESSING_YEAR} listed as UAC and not UAC20.")
+    urls.append(uac_url)
 
-    # Check if the UAC10 exists
-    if url_exists(uac_10_url):
-        print(f"URL Exists: {uac_10_url}")
-        wget.download(uac_10_url, out=USCB_ZIP)
-        print("     > Done")
-    else:
-        uac_10_url = (
-            "https://www2.census.gov/geo/tiger/TIGER2022/UAC/tl_2022_us_uac10.zip"
-        )
-        wget.download(uac_10_url, out=USCB_ZIP)
-        print("     > 2010 UAC downloaded from 2022 Directory.")
+    uac_10_url = f"{base}/UAC/tl_{PROCESSING_YEAR}_us_uac10.zip"
+    if not url_exists(uac_10_url):
+        uac_10_url = "https://www2.census.gov/geo/tiger/TIGER2022/UAC/tl_2022_us_uac10.zip"
+        print("     > 2010 UAC will be downloaded from 2022 Directory.")
+    urls.append(uac_10_url)
 
-    """
-    Download the SkyTruth MTM Study Area bounds, if they have not been downloaded.
-    """
-    study_area_url = "https://skytruth.org/MTR/MTR_Data/Other-Data/Study-Area.zip"
-
-    print(STUDY_AREA_ZIP + "Study-Area.zip")
-    if os.path.exists(STUDY_AREA_ZIP + "Study-Area.zip"):
-        print("     > MTM Study Area boundary already downloaded...")
-        print("     > Done")
-    else:
-        print("     > Downloading MTM Study Area boundary...")
-        wget.download(study_area_url, out=STUDY_AREA_ZIP)
-        print("     > Done")
+    print(f"     > Downloading {len(urls)} USCB files (existing files are skipped)...")
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        list(pool.map(fetch, urls))
+    print("     > Done")
 
 
-def data_processing():
-    print(f"Processing the data from the USCB for the year {PROCESSING_YEAR}.")
-    uscb_zip_list = sorted(
-        list(filter(lambda zip: ".zip" in zip, os.listdir(USCB_ZIP)))
-    )
-
-    for i in uscb_zip_list:
-        infile = glob.glob(USCB_ZIP + i)[0]
-        outfile = i.strip(".zip") + ".shp"
-
-        # Check if the outfiles already exist, if they don't unzip them, if they do pass
-        if os.path.isfile(USCB_SHP + outfile):
-            pass
-        else:
-            print(f" > Unzipping {i} writing to {USCB_SHP+outfile}")
-            ZipFile(infile).extractall(path=USCB_SHP)
-
-    print("\nFINISHED UNZIPPING FILES\n")
-
-    # Unzip the MTM Study Area
-    study_area_zip_list = sorted(
-        list(filter(lambda zip: ".zip" in zip, os.listdir(STUDY_AREA_ZIP)))
-    )
-    for i in study_area_zip_list:
-        infile = glob.glob(STUDY_AREA_ZIP + i)[0]
-        outfile = i.strip(".zip") + ".shp"
-
-        # Check if the outfiles already exist, if they don't unzip them, if they do pass
-        if os.path.isfile(STUDY_AREA_SHP + outfile):
-            pass
-        else:
-            print(f" > Unzipping {i} writing to {STUDY_AREA_SHP+outfile}")
-            ZipFile(infile).extractall(path=STUDY_AREA_SHP)
-
-    print("\nBEGINNING CONVERSION TO GEOJSON\n")
-
-    # Convert the Shapefiles to GeoJSON
-    uscb_shp_list = sorted(
-        list(filter(lambda shp: ".shp" in shp, os.listdir(USCB_SHP)))
-    )
-    uscb_shp_list = [x for x in uscb_shp_list if ".iso" not in x]
-    study_area_shp_list = sorted(
-        list(filter(lambda shp: ".shp" in shp, os.listdir(STUDY_AREA_SHP)))
-    )
-
-    for i in uscb_shp_list:
-        infile = glob.glob(USCB_SHP + i)[0]
-        outfile = i.strip(".shp") + ".geojson"
-
-        if os.path.isfile(USCB_GJS + outfile):
-            pass
-        else:
-            gdf = gpd.read_file(USCB_SHP + i)
-            gdf.to_file(USCB_GJS + outfile, driver="GeoJSON")
-
-    for i in study_area_shp_list:
-        infile = glob.glob(STUDY_AREA_SHP + i)[0]
-        outfile = i.strip(".shp") + ".geojson"
-
-        if os.path.isfile(STUDY_AREA_GJS + outfile):
-            pass
-        else:
-            gdf = gpd.read_file(STUDY_AREA_SHP + i)
-            # print(gdf.head(1))
-            gdf.to_file(STUDY_AREA_GJS + outfile, driver="GeoJSON")
-
-    print("\nFINISHED CONVERSION TO GEOJSON\n")
+def buffer_layer(path, study_area=None):
+    """Read one USCB layer from its zip and return 60 m buffers in EPSG:3857."""
+    gdf = gpd.read_file(path, columns=[])
+    if study_area is not None:
+        gdf = gdf.to_crs(4326).clip(study_area)
+    buffered = gdf.to_crs(5072).buffer(60)
+    return gpd.GeoDataFrame(geometry=buffered, crs=5072).to_crs(3857)
 
 
 def mask_creation():
-    print("\n\nBEGINNING MASK CREATION PROCESS - GEOJSON MERGE\n\n")
-    geojson_list = sorted(
-        list(filter(lambda geojson: ".geojson" in geojson, os.listdir(USCB_GJS)))
-    )
-
-    mtm_study_area = gpd.read_file(STUDY_AREA_GJS + "Study-Area.geojson")
-    outfile = f"{PROCESSING_YEAR}_USCB_data_buffered_merged_3857.geojson"
-    outfile_2 = f"{PROCESSING_YEAR}_USCB_data_buffered_merged_3857.shp"
+    print("\n\nBEGINNING MASK CREATION PROCESS - BUFFER\n\n")
+    outfile = f"{PROCESSING_YEAR}_USCB_data_buffered_3857.fgb"
 
     if os.path.isfile(MASK_INTERIM + outfile):
         print("Mask file exists.")
-        pass
+        return gpd.read_file(MASK_INTERIM + outfile)
 
-    else:
-        processed_geojson = []
-        for i in geojson_list:
-            if "uac" in i:
-                print("Processing Urban Areas data, clipping to study area bounds")
-                gdf = gpd.read_file(USCB_GJS + i)
-                reproj_gdf = gdf.to_crs(4326)
-                gdf_clipped = reproj_gdf.clip(mtm_study_area)  # , keep_geom_type=True)
-                reproj = gdf_clipped.to_crs(5072)
-                exploded_gdf = reproj.explode(index_parts=False)
-                exploded_gdf["geometry"] = exploded_gdf.geometry.buffer(60)
-                dissolved = exploded_gdf.dissolve()
-                processed_geojson.append(dissolved)
-            else:
-                gdf = gpd.read_file(USCB_GJS + i)
-                reproj = gdf.to_crs(5072)
-                exploded_gdf = reproj.explode(index_parts=False)
-                exploded_gdf["geometry"] = exploded_gdf.geometry.buffer(60)
-                dissolved = exploded_gdf.dissolve()
-                processed_geojson.append(dissolved)
-        merged = pd.concat(processed_geojson)
-        final_merge = gpd.GeoDataFrame(merged)
-        final_merge_reproj = final_merge.to_crs(3857)
-        final_merge_reproj.to_file(MASK_INTERIM + outfile, driver="GeoJSON")
-        final_merge_reproj.to_file(MASK_INTERIM + outfile_2)
+    mtm_study_area = gpd.read_file(f"zip://{STUDY_AREA_ZIP}Study-Area.zip!Study-Area.shp")
+    zips = sorted(f for f in os.listdir(USCB_ZIP) if f.endswith(".zip"))
+    paths = [USCB_ZIP + f for f in zips]
+    study_areas = [mtm_study_area if "uac" in f else None for f in zips]
+
+    with ProcessPoolExecutor(max_workers=8) as pool:
+        layers = list(pool.map(buffer_layer, paths, study_areas))
+
+    merged = gpd.GeoDataFrame(pd.concat(layers, ignore_index=True), crs=3857)
+    merged.to_file(MASK_INTERIM + outfile, driver="FlatGeobuf")
+    return merged
 
 
-def mask_rasterization_pt1():
+def mask_rasterization_pt1(gdf=None):
     print("\n\nBEGINNING MASK RASTERIZATION PROCESS\n\n")
-    infile = f"{PROCESSING_YEAR}_USCB_data_buffered_merged_3857.geojson"
-    outfile = f"{PROCESSING_YEAR}_Input-Mask_interim_3857.tiff"
+    outfile = f"{PROCESSING_YEAR}_Input-Mask_interim_3857_v2.tiff"
 
     if os.path.isfile(MASK_INTERIM + outfile):
         print(f"Outfile, {outfile}, already exists")
-        pass
-    else:
-        # open the shapefile.
-        try:
-            geojson = ogr.Open(MASK_INTERIM + infile)
-            print("Opened")
-            # print(geojson)
-        except RuntimeError as e:
-            print("Error: Could not open shapefile. Please try again.")
+        return
 
-        geojson_layer = geojson.GetLayer()
-        xmin, xmax, ymin, ymax = geojson_layer.GetExtent()
+    if gdf is None:
+        gdf = gpd.read_file(MASK_INTERIM + f"{PROCESSING_YEAR}_USCB_data_buffered_3857.fgb")
 
-        print(f"X-Min: {xmin}\nX-Max: {xmax}")
-        print(f"Y-Min: {ymin}\nY-Max: {ymax}")
+    xmin, ymin, xmax, ymax = gdf.total_bounds
 
-        pixel_size = 15
-        no_data_value = -9999
-        # rdtype = gdal.GDT_Float32
-        rdtype = gdal.GDT_Byte
-        projection = 3857
+    print(f"X-Min: {xmin}\nX-Max: {xmax}")
+    print(f"Y-Min: {ymin}\nY-Max: {ymax}")
 
-        x_res = int(round((xmax - xmin) / pixel_size))
-        y_res = int(round((ymax - ymin) / pixel_size))
+    pixel_size = 15
+    width = int(round((xmax - xmin) / pixel_size))
+    height = int(round((ymax - ymin) / pixel_size))
+    transform = from_origin(xmin, ymax, pixel_size, pixel_size)
 
-        target_ds = gdal.GetDriverByName("GTiff").Create(
-            MASK_INTERIM + outfile,
-            x_res,
-            y_res,
-            1,
-            eType=rdtype,
-            options=["COMPRESS=DEFLATE"],
-        )
-        target_ds.SetGeoTransform(
-            (xmin, pixel_size, 0.0, ymax, 0.0, -pixel_size)
-        )  # specify boundaries of output raster
+    profile = {
+        "driver": "GTiff",
+        "width": width,
+        "height": height,
+        "count": 1,
+        "dtype": "uint8",
+        "crs": "EPSG:3857",
+        "transform": transform,
+        "compress": "deflate",
+        "nodata": None,
+    }
 
-        # Specify projection of intermediate output raster
-        srse = osr.SpatialReference()  # srse represents a SpatialReference instance
-        srse.ImportFromEPSG(projection)  # import projection of output raster
-        target_ds.SetProjection(
-            srse.ExportToWkt()
-        )  # set the projection of the output raster
-
-        # Bands
-        band = target_ds.GetRasterBand(1)  # only 1 band in our raster
-        target_ds.GetRasterBand(1).SetNoDataValue(no_data_value)
-        band.Fill(no_data_value)
-
-        print("Starting rasterization...")
-        gdal.RasterizeLayer(
-            target_ds,
-            [1],
-            geojson_layer,
-            None,
-            None,
-            burn_values=[1],
-            options=["ALL_TOUCHED=TRUE"],
-        )
-        target_ds = None
-        print("Rasterization finished.")
+    print("Starting rasterization...")
+    strip = 1024  # rows per chunk, so the whole raster is never held in memory
+    with rasterio.open(MASK_INTERIM + outfile, "w", **profile) as dst:
+        for row in range(0, height, strip):
+            window = Window(0, row, width, min(strip, height - row))
+            hits = gdf.sindex.query(box(*window_bounds(window, transform)))
+            if len(hits) == 0:
+                burned = np.zeros((window.height, window.width), dtype="uint8")
+            else:
+                burned = features.rasterize(
+                    ((geom, 1) for geom in gdf.geometry.iloc[hits]),
+                    out_shape=(window.height, window.width),
+                    transform=dst.window_transform(window),
+                    fill=0,
+                    all_touched=True,
+                    dtype="uint8",
+                )
+            dst.write(burned, 1, window=window)
+    print("Rasterization finished.")
 
 
 def mask_rasterization_pt2():
-    infile = f"{PROCESSING_YEAR}_Input-Mask_interim_3857.tiff"
-    outfile = f"{PROCESSING_YEAR}_Input-Mask_4326.tiff"
-    input_raster = gdal.Open(MASK_INTERIM + infile)
+    infile = f"{PROCESSING_YEAR}_Input-Mask_interim_3857_v2.tiff"
+    outfile = f"{PROCESSING_YEAR}_Input-Mask_4326_v2.tiff"
 
     if os.path.isfile(MASK_FINAL + outfile):
         print(f"Outfile, {outfile}, already exists")
-        pass
-    else:
-        print("\n\nFINALIZING MASK RASTERIZATION\n\n")
-        print("Beginning raster mask reprojection.\n")
-        input_raster = gdal.Open(MASK_INTERIM + infile)
-        gdal.Warp(
-            destNameOrDestDS=MASK_FINAL + outfile,
-            srcDSOrSrcDSTab=input_raster,
-            options="-co TILED=YES -co COMPRESS=DEFLATE -co INTERLEAVE=BAND -co PREDICTOR=2 -t_srs EPSG:4326 -wo CUTLINE_ALL_TOUCHED=TRUE",
-        )
+        return
 
-        print("FINISHED RASTER MASK REPROJECTION.")
+    print("\n\nFINALIZING MASK RASTERIZATION\n\n")
+    print("Beginning raster mask reprojection.\n")
+    dst_crs = "EPSG:4326"
+    with rasterio.open(MASK_INTERIM + infile) as src:
+        transform, width, height = calculate_default_transform(
+            src.crs, dst_crs, src.width, src.height, *src.bounds
+        )
+        profile = src.profile.copy()
+        profile.update(
+            crs=dst_crs,
+            transform=transform,
+            width=width,
+            height=height,
+            tiled=True,
+            blockxsize=256,
+            blockysize=256,
+            compress="deflate",
+            predictor=2,
+            interleave="band",
+        )
+        with rasterio.open(MASK_FINAL + outfile, "w", **profile) as dst:
+            reproject(
+                source=rasterio.band(src, 1),
+                destination=rasterio.band(dst, 1),
+                resampling=Resampling.nearest,
+            )
+    print("FINISHED RASTER MASK REPROJECTION.")
 
 
 def mask_upload():
     print(f"\n\nBEGINNING MASK UPLOAD TO GCS...")
 
-    infile = f"{PROCESSING_YEAR}_Input-Mask_4326.tiff"
+    infile = f"{PROCESSING_YEAR}_Input-Mask_4326_v2.tiff"
     outfile_name = infile
     infile_path = MASK_FINAL + infile
 
@@ -350,8 +249,7 @@ def mask_upload():
 if __name__ == "__main__":
     data_dir_creation()
     data_download()
-    data_processing()
-    mask_creation()
-    mask_rasterization_pt1()
+    gdf = mask_creation()
+    mask_rasterization_pt1(gdf)
     mask_rasterization_pt2()
     mask_upload()
