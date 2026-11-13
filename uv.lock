@@ -839,7 +839,6 @@ dependencies = [
     { name = "scikit-image" },
     { name = "shapely" },
     { name = "sqlalchemy" },
-    { name = "wget" },
     { name = "whitebox-workflows" },
 ]
 
@@ -863,7 +862,6 @@ requires-dist = [
     { name = "scikit-image", specifier = ">=0.25.2,<0.26" },
     { name = "shapely", specifier = ">=2.0.7,<3" },
     { name = "sqlalchemy", specifier = ">=2.0.43,<3" },
-    { name = "wget", specifier = ">=3.2,<4" },
     { name = "whitebox-workflows", specifier = "==1.3.3" },
 ]
 
@@ -1769,12 +1767,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/15/22/9ee70a2574a4f4599
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/c2/fe1e52489ae3122415c51f387e221dd0773709bad6c6cdaa599e8a2c5185/urllib3-2.5.0-py3-none-any.whl", hash = "sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc", size = 129795, upload-time = "2025-06-18T14:07:40.39Z" },
 ]
-
-[[package]]
-name = "wget"
-version = "3.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/47/6a/62e288da7bcda82b935ff0c6cfe542970f04e29c756b0e147251b2fb251f/wget-3.2.zip", hash = "sha256:35e630eca2aa50ce998b9b1a127bb26b30dfee573702782aa982f875e3f16061", size = 10857, upload-time = "2015-10-22T15:26:37.51Z" }
 
 [[package]]
 name = "whitebox-workflows"
