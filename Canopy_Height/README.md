@@ -4,7 +4,7 @@ This project creates a wall-to-wall 10m canopy height model (CHM) for 73 countie
 [Read the full report here.](https://docs.google.com/document/d/1bMBGrUBo6LNwxNrPXTVW6mD1SCKbbWqQ_B9PEYEKGdk/edit?usp=sharing)
 
 ## Computational Environment
-Due to the large data volume and processing requirements for creating a CHM across 73 counties, this code was developed and tested in specialized computational environments (detailed below) separate from the poetry-managed environment used for the rest of the MTM repository.
+Due to the large data volume and processing requirements for creating a CHM across 73 counties, this code was developed and tested in specialized computational environments (detailed below) separate from the uv-managed environment used for the rest of the MTM repository.
 
 ## GCS Bucket Directory Structure
 This repository was designed to read and write files to a Google Cloud Storage (GCS) bucket. The following directory structure should be maintained in the GCS bucket for proper data organization and processing:
