@@ -95,7 +95,7 @@ mask_url = (
     + "/"
     + GCLOUD_MASK_DIR
     + str(processing_year)
-    + "_Input-Mask_4326.tiff"
+    + "_Input-Mask_4326_v2.tiff"
 )
 mask_input_60m = ee.Image.loadGeoTIFF(mask_url).unmask()
 

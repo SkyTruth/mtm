@@ -17,14 +17,10 @@ TEMP_DIR = DATA_DIR + "tmp/"
 MASK_DATA = DATA_DIR + "USCB_Data/"
 USCB_YEAR = MASK_DATA + str(PROCESSING_YEAR) + "/"
 USCB_ZIP = USCB_YEAR + "zipped/"
-USCB_SHP = USCB_YEAR + "shapefile/"
-USCB_GJS = USCB_YEAR + "geojson/"
 
 # Study Area Dirs
 STUDY_AREA_DIR = DATA_DIR + "studyArea/"
 STUDY_AREA_ZIP = STUDY_AREA_DIR + "zipped/"
-STUDY_AREA_SHP = STUDY_AREA_DIR + "shapefile/"
-STUDY_AREA_GJS = STUDY_AREA_DIR + "geojson/"
 
 # Dir for Mask
 MASK_DIR = DATA_DIR + "maskData/"
